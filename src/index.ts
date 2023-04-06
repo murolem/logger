@@ -17,7 +17,18 @@ export type MessageLogParams = {
 	 * 
 	 * @default false
 	 */
-	alwaysLogAdditional: boolean,
+	alwaysLogAdditional: boolean | Partial<{
+		/** 
+		 * A function that transforms the results or an array of strings and numbers 
+		 * that acts as an approved list for selecting the object properties that will be stringified. 
+		 */
+		replacer: ((this: any, key: string, value: any) => any) | (number | string)[] | null,
+		/** 
+		 * Adds indentation, white space, and line break characters to the 
+		 * return-value JSON text to make it easier to read. 
+		 */
+		space: string | number
+	}>,
 
 	/**
 	 * Конвертирует значение {@link MessageLogParams.additional additional} в строку используя метод {@link JSON.stringify}.
@@ -198,7 +209,7 @@ export class Logger  {
 		const logAdditional = alwaysLogAdditional || additional !== undefined;
 		if(logAdditional)
 			console.log(prefix + 'дополнительные данные:\n',
-				stringifyAdditional ? JSON.stringify(additional) : additional);
+				stringifyAdditional ? JSON.stringify(additional, null, 2) : additional);
 		
 		if(alertMsg) {
 			const parts = [
