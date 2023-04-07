@@ -1,7 +1,14 @@
-import { test, expect } from 'playwright-test-coverage';
-import { type Page, JSHandle, ConsoleMessage } from '@playwright/test';
+// import { test, expect } from 'playwright-test-coverage';
+import { test, expect, type Page, JSHandle, ConsoleMessage } from '@playwright/test';
 import { LogAliasFn, LogLevel, Logger } from '../src/index';
 import { UncertianPromiseResult, UncertianPromiseResultSuccess, UncertianResultFailure } from './types/UncertianPromise';
+import libCoverage from 'istanbul-lib-coverage';
+import libReport from 'istanbul-lib-report';
+import reports from 'istanbul-reports';
+import v8toIstanbul from 'v8-to-istanbul';
+import fs from 'fs-extra';
+import path from 'path';
+
 
 const utilityFunctionsTimeout = 3000;
 
@@ -58,7 +65,7 @@ async function runFnAndGatherConsoleEventsForDuration<T>(page: Page, fn: () => T
     page.evaluate(fn, args);
 
     return await consoleEventsPromise;
-}       
+}
 
 async function gatherConsoleEventsForDuration(page: Page, duration: number, {
     specificMessage,
@@ -84,8 +91,8 @@ async function gatherConsoleEventsForDuration(page: Page, duration: number, {
         if (isSpecificMessageSet && msg !== specificMessage)
             return false;
 
-        consoleEventDataRecords.push({ msg, type, args });           
-        
+        consoleEventDataRecords.push({ msg, type, args });
+
         return false;
     }
     page.waitForEvent('console', consoleEventListener)
@@ -225,10 +232,96 @@ async function runAsyncFnWithTimeout<T>(fn: () => Promise<T>, timeout = utilityF
     }
 }
 
+function getCoverageGatherer() {
+    const cwd = process.cwd();
+    const coverageMap = libCoverage.createCoverageMap();
 
+    return {
+        async gatherCoverageForPage(page: Page) {
+            const coverage = await page.coverage.stopJSCoverage();
+            for (const entry of coverage) {
+                if (entry.url === '')
+                    continue;
+                
+                const scriptPath = path.join(cwd, new URL(entry.url).pathname);
+                const converter = v8toIstanbul(scriptPath, 0, { source: entry.source! }, (filepath) => {
+                    const normalized = filepath.replace(/\\/g, '/');
+                    const ret = normalized.includes('node_modules/');
+                    return ret;
+                });
+        
+                await converter.load();
+                converter.applyCoverage(entry.functions);
+        
+                const data = converter.toIstanbul();
+                coverageMap.merge(data);
+            }
+        },
+        async saveCoverage() {
+            // await fs.remove('coverage');
+            const context = libReport.createContext({ coverageMap });
+            reports.create('html').execute(context);
+        }
+    }
+}
+
+/**
+ * 
+ * thanks https://github.com/microsoft/playwright/discussions/14415#discussioncomment-2977900
+ * @param page 
+ */
+async function saveV8Coverage(page: Page): Promise<void> {
+    const cwd = process.cwd();
+
+    const coverage = await page.coverage.stopJSCoverage();
+    const map = libCoverage.createCoverageMap();
+    for (const entry of coverage) {
+        if (entry.url === '')
+            continue;
+        
+        const scriptPath = path.join(cwd, new URL(entry.url).pathname);
+        const converter = v8toIstanbul(scriptPath, 0, { source: entry.source! }, (filepath) => {
+            const normalized = filepath.replace(/\\/g, '/');
+            const ret = normalized.includes('node_modules/');
+            return ret;
+        });
+
+        await converter.load();
+        converter.applyCoverage(entry.functions);
+
+        const data = converter.toIstanbul();
+        map.merge(data);
+    }
+    await fs.rm('coverage', { force: true, recursive: true });
+    const context = libReport.createContext({ coverageMap: map });
+    reports.create('html').execute(context);
+}
+
+let { gatherCoverageForPage, saveCoverage } = getCoverageGatherer();
 test.beforeEach(async ({ page }) => {
     await page.goto('http://127.0.0.1:3000');
+
+    // await page.evaluate(async (loggerAsStr) => {
+    //     // @ts-ignore
+    //     window.Logger = loggerAsStr;
+    // }, Logger.toString());
+
+    await page.coverage.startJSCoverage();
 });
+
+test.afterEach(async ({ page }, workerInfo) => {
+    if(workerInfo.config.workers === 1)
+        await gatherCoverageForPage(page);
+});
+
+test.afterAll(async ({ }, workerInfo) => {
+    if(workerInfo.config.workers === 1)
+        await saveCoverage();
+
+    // @ts-ignore
+    // process.env.helloWorld = 123;
+});
+
 
 test('logs a "hello world" message', async ({ page }) => {
     const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
@@ -247,7 +340,7 @@ test('logs a "hello world" message with a "root" prefix', async ({ page }) => {
     }, 100);
 
     expect(consoleEvents.length).toBe(1);
-    expect(consoleEvents[0].msg).toBe('[info > root] hello world');
+    expect(consoleEvents[0].msg).toBe('[info | root] hello world');
 });
 
 test('logs a "hello world" message with prefixes "root" and "foo"', async ({ page }) => {
@@ -255,9 +348,9 @@ test('logs a "hello world" message with prefixes "root" and "foo"', async ({ pag
         let logger = new window.Logger(['root', 'foo']);
         logger.log('info', 'hello world');
     }, 100);
-    
+
     expect(consoleEvents.length).toBe(1);
-    expect(consoleEvents[0].msg).toBe('[info > root > foo] hello world');
+    expect(consoleEvents[0].msg).toBe('[info | root > foo] hello world');
 });
 
 
@@ -281,7 +374,7 @@ test.describe('logging a "hello world" message with varying log levels with logD
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe(`[debug] hello world`);
     });
-    
+
     test('logInfo() logs using "info" log level', async ({ page }) => {
         const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -449,7 +542,7 @@ test.describe('logging a "hello world" message with "additional" data', () => {
         const additionalMsgEventData = (additionalMsgEventDataResult as Exclude<typeof additionalMsgEventDataResult, UncertianResultFailure>).result;
 
         const additionalMsg = additionalMsgEventDataResult.success ? await additionalMsgEventData.args[0]!.jsonValue() : null;
-        const additionalMsgObject = additionalMsgEventDataResult.success ? await additionalMsgEventData.args[1]! .jsonValue() : null;
+        const additionalMsgObject = additionalMsgEventDataResult.success ? await additionalMsgEventData.args[1]!.jsonValue() : null;
 
         expect(additionalMsgEventDataResult.success).toBe(true);
         expect(additionalMsg).toBe('[info] дополнительные данные:\n');

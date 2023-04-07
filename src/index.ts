@@ -199,7 +199,7 @@ export class Logger  {
 		alertMsg = false,
 		throwErr = false
 	}: Partial<MessageLogParams> = {}) {
-		const prefix = `[${level}${this.#prefixBody ? ` > ${this.#prefixBody}` : ''}] `;
+		const prefix = `[${level}${this.#prefixBody ? ` | ${this.#prefixBody}` : ''}] `;
 		const msgWithPrefix = prefix + msg;
 		const logMsg = throwErr !== true;
 
