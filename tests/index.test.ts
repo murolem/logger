@@ -46,25 +46,26 @@ async function wait(duration: number) {
     return new Promise((resolve) => setTimeout(resolve, duration));
 }
 
-async function runFnAndGatherConsoleEventsForDuration<T>(page: Page, fn: () => T | Promise<T>, duration: number, {
+async function runFnAndGatherConsoleEventsForDuration<T extends any, A extends Record<string, any>>(page: Page, fn: (arg: A) => T | Promise<T>, duration: number, {
     specificMessage,
     additionalMessagesToIgnore = [],
-    args
+    args,
 }: Partial<{
     /** filter for a specific console message */
     specificMessage: string,
     /** filter for a specific console messages */
     additionalMessagesToIgnore: string[],
     /** additional data to pass to {@link fn} as an argument */
-    args: T
-}> = {}): Promise<ConsoleEventData[]> {
+    args: A
+}> = {}): Promise<{ consoleEventsPromise: Promise<ConsoleEventData[]>, pageFnRunnerPromise: Promise<T> }> {
     const consoleEventsPromise = gatherConsoleEventsForDuration(page, duration, {
         specificMessage,
         additionalMessagesToIgnore
     });
-    page.evaluate(fn, args);
+    // @ts-ignore i dont understand you typescript
+    const pageFnRunnerPromise = page.evaluate(fn, args);
 
-    return await consoleEventsPromise;
+    return { consoleEventsPromise, pageFnRunnerPromise };
 }
 
 async function gatherConsoleEventsForDuration(page: Page, duration: number, {
@@ -97,7 +98,8 @@ async function gatherConsoleEventsForDuration(page: Page, duration: number, {
     }
     page.addListener('console', consoleEventListener);
 
-    await wait(duration);
+    await wait(duration)
+        // .catch(err => { throw new Error('got an error: ' + err)});
     page.removeListener('console', consoleEventListener);
 
     return consoleEventDataRecords;
@@ -323,10 +325,11 @@ test.afterAll(async ({ }, workerInfo) => {
 
 
 test('logs a "hello world" message', async ({ page }) => {
-    const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+    const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
         let logger = new window.Logger();
         logger.log('info', 'hello world');
     }, 100);
+    const consoleEvents = await consoleEventsPromise;
 
     expect(consoleEvents.length).toBe(1);
     expect(consoleEvents[0].msg).toBe('[info] hello world');
@@ -334,20 +337,22 @@ test('logs a "hello world" message', async ({ page }) => {
 
 test.describe('prefixes', () => {
     test('logs a "hello world" message with a "root" prefix', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger('root');
             logger.log('info', 'hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
     
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[info | root] hello world');
     });
     
     test('logs a "hello world" message with prefixes "root" and "foo"', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger(['root', 'foo']);
             logger.log('info', 'hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
     
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[info | root > foo] hello world');
@@ -356,50 +361,55 @@ test.describe('prefixes', () => {
 
 test.describe('log levels', () => {
     test('logs a "hello world" message with a "warn" log level', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('warn', 'hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
     
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[warn] hello world');
     });
 
     test('logDebug() logs using "debug" log level', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logDebug('hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe(`[debug] hello world`);
     });
 
     test('logInfo() logs using "info" log level', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logInfo('hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe(`[info] hello world`);
     });
 
     test('logWarn() logs using "warn" log level', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logWarn('hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe(`[warn] hello world`);
     });
 
     test('logError() logs using "error" log level', async ({ page }) => {
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logError('hello world');
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe(`[error] hello world`);
@@ -411,12 +421,13 @@ test.describe('passing additional data', () => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'foo and bar'];
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
                 additional: 'foo and bar'
             });
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
     
@@ -437,12 +448,13 @@ test.describe('passing additional data', () => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', { foo: "and bar" }];
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
                 additional: { foo: "and bar" }
             });
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
     
@@ -462,12 +474,13 @@ test.describe('passing additional data', () => {
     test('logging only "main" message when "additional" is "undefined"', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
                 additional: undefined
             });
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
     
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(1);
@@ -478,13 +491,14 @@ test.describe('passing additional data', () => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', undefined];
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
                 additional: undefined,
                 alwaysLogAdditional: true
             });
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
     
@@ -505,13 +519,14 @@ test.describe('passing additional data', () => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', JSON.stringify({ foo: "and bar" }, null, 2)];
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
                 additional: { foo: "and bar" },
                 stringifyAdditional: true
             });
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
     
@@ -534,7 +549,7 @@ test.describe('throwing errors', () => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'foo and bar'];
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
                 additional: 'foo and bar',
@@ -542,9 +557,10 @@ test.describe('throwing errors', () => {
             });
             logger.log('info', 'hello world', {
                 additional: 'foo and bar',
-                throwErr: 'hello world'
+                throwErr: undefined
             });
         }, 100);
+        const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
@@ -567,22 +583,24 @@ test.describe('throwing errors', () => {
 
 
     test('error is thrown when "throwErr" is true with text of "main" message; "main" message is not logging, but "additional" is', async ({ page }) => {
-        const expectedErrorMessage = '[info] this is a error message';
+        const expectedErrorMessage = 'Error: [info] hello world';
         const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'foo and bar'];
     
-        const consoleEvents = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, ({ expectedErrorMessage }) => {
             let logger = new window.Logger();
+
             logger.log('info', 'hello world', {
                 additional: 'foo and bar',
                 throwErr: true
             });
-        }, 100);
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
+        }, 100, { args: { expectedErrorMessage }});
+        await (expect(pageFnRunnerPromise)).rejects.toThrow(expectedErrorMessage);
+
+        const consoleEvents = await consoleEventsPromise;
+        const additionalMessageData = consoleEvents[0];
     
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedErrorMessage);
-        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+        expect(consoleEvents.length).toBe(1);
+        expect(additionalMessageData.args.length).toBe(2);
     
         const additionalMessageArgs = await Promise.all([
             additionalMessageData.args[0].jsonValue(),
@@ -593,11 +611,11 @@ test.describe('throwing errors', () => {
         expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
     });
 
-    test('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
+    test.skip('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
         
     });
 
-    test('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
+    test.skip('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
         
     });
 

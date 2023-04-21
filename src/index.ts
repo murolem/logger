@@ -225,11 +225,11 @@ export class Logger  {
 		
 		if(throwErr) {
 			if(typeof throwErr === 'string') // throwing custom message
-				throw new Error(throwErr);
+				throw new Error(prefix + throwErr);
 			else if (throwErr instanceof Error) // throwing the provided error
 				throw throwErr;
 			else // boolean true -- loggin the message in error itself
-				throw new Error(msg);
+				throw new Error(msgWithPrefix);
 		}
 	}
 }
