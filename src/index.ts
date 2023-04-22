@@ -226,9 +226,10 @@ export class Logger  {
 		if(throwErr) {
 			if(typeof throwErr === 'string') // throwing custom message
 				throw new Error(prefix + throwErr);
-			else if (throwErr instanceof Error) // throwing the provided error
+			else if (throwErr instanceof Error) { // throwing the provided error
+				throwErr.message = prefix + throwErr.message;
 				throw throwErr;
-			else // boolean true -- loggin the message in error itself
+			} else // boolean true -- loggin the message in error itself
 				throw new Error(msgWithPrefix);
 		}
 	}

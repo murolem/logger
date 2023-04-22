@@ -583,18 +583,18 @@ test.describe('throwing errors', () => {
 
 
     test('error is thrown when "throwErr" is true with text of "main" message; "main" message is not logging, but "additional" is', async ({ page }) => {
-        const expectedErrorMessage = 'Error: [info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'foo and bar'];
+        const expectedErrorMessage = 'Error: [error] hello world';
+        const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
     
-        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, ({ expectedErrorMessage }) => {
+        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
 
-            logger.log('info', 'hello world', {
+            logger.log('error', 'hello world', {
                 additional: 'foo and bar',
                 throwErr: true
             });
-        }, 100, { args: { expectedErrorMessage }});
-        await (expect(pageFnRunnerPromise)).rejects.toThrow(expectedErrorMessage);
+        }, 100);
+        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
         const additionalMessageData = consoleEvents[0];
@@ -611,13 +611,67 @@ test.describe('throwing errors', () => {
         expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
     });
 
-    test.skip('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
-        
+    test('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
+        const expectedMainMessage = '[error] hello world';
+        const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
+        const expectedErrorMessage = 'Error: [error] this is an error'
+    
+        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+
+            logger.log('error', 'hello world', {
+                additional: 'foo and bar',
+                throwErr: new Error('this is an error')
+            });
+        }, 100);
+        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+
+        const consoleEvents = await consoleEventsPromise;
+        const mainMessageData = consoleEvents[0];
+        const additionalMessageData = consoleEvents[1];
+    
+        expect(consoleEvents.length).toBe(2);
+        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+        expect(additionalMessageData.args.length).toBe(2);
+    
+        const additionalMessageArgs = await Promise.all([
+            additionalMessageData.args[0].jsonValue(),
+            additionalMessageData.args[1].jsonValue()
+        ]);
+    
+        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
     });
 
-    test.skip('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
-        
+    test('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
+        const expectedMainMessage = '[error] hello world';
+        const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
+        const expectedErrorMessage = 'Error: [error] this is an error'
+    
+        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+
+            logger.log('error', 'hello world', {
+                additional: 'foo and bar',
+                throwErr: 'this is an error'
+            });
+        }, 100);
+        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+
+        const consoleEvents = await consoleEventsPromise;
+        const mainMessageData = consoleEvents[0];
+        const additionalMessageData = consoleEvents[1];
+    
+        expect(consoleEvents.length).toBe(2);
+        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+        expect(additionalMessageData.args.length).toBe(2);
+    
+        const additionalMessageArgs = await Promise.all([
+            additionalMessageData.args[0].jsonValue(),
+            additionalMessageData.args[1].jsonValue()
+        ]);
+    
+        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
     });
-
-
 });
