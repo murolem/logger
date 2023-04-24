@@ -1,4 +1,5 @@
 // TODO test for json thing
+// TODO test + coverage badge
 
 /**
  * Additional-optional parameters used when logging.
