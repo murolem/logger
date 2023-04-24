@@ -300,7 +300,7 @@ async function saveV8Coverage(page: Page): Promise<void> {
 }
 
 test.beforeAll(() => {
-    console.log('CI variable: ' + process.env.CI);
+    // console.log('CI variable: ' + process.env.CI);
 });
 
 let { gatherCoverageForPage, saveCoverage } = getCoverageGatherer();
