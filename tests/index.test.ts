@@ -11,6 +11,7 @@ import path from 'path';
 
 
 const utilityFunctionsTimeout = 3000;
+const regularTestPageFunctionRunningTimeout = 750; // will fail if not enough time is provided
 
 class TimeoutError extends Error {
     constructor(msg?: string) {
@@ -299,7 +300,7 @@ async function saveV8Coverage(page: Page): Promise<void> {
 }
 
 let { gatherCoverageForPage, saveCoverage } = getCoverageGatherer();
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, browserName }, workerInfo) => {
     await page.goto('http://127.0.0.1:3000');
 
     // await page.evaluate(async (loggerAsStr) => {
@@ -307,18 +308,19 @@ test.beforeEach(async ({ page }) => {
     //     window.Logger = loggerAsStr;
     // }, Logger.toString());
 
-    await page.coverage.startJSCoverage();
+    if(browserName === 'chromium' && workerInfo.config.workers === 1) // gather coverage only in chromium
+        await page.coverage.startJSCoverage();
 });
 
-test.afterEach(async ({ page }, workerInfo) => {
+test.afterEach(async ({ page, browserName }, workerInfo) => {
     // coverage is collected only when 1 worker is used
-    if (workerInfo.config.workers === 1)
+    if (browserName === 'chromium' && workerInfo.config.workers === 1) // gather coverage only in chromium
         await gatherCoverageForPage(page);
 });
 
-test.afterAll(async ({ }, workerInfo) => {
+test.afterAll(async ({ browserName }, workerInfo) => {
     // coverage is collected only when 1 worker is used
-    if (workerInfo.config.workers === 1)
+    if (browserName === 'chromium' && workerInfo.config.workers === 1)  // gather coverage only in chromium
         await saveCoverage();
 });
 
@@ -327,7 +329,7 @@ test('logs a "hello world" message', async ({ page }) => {
     const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
         let logger = new window.Logger();
         logger.log('info', 'hello world');
-    }, 100);
+    }, regularTestPageFunctionRunningTimeout);
     const consoleEvents = await consoleEventsPromise;
 
     expect(consoleEvents.length).toBe(1);
@@ -339,7 +341,7 @@ test.describe('prefixes', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger('root');
             logger.log('info', 'hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -350,7 +352,7 @@ test.describe('prefixes', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger('root', 'foo');
             logger.log('info', 'hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -363,7 +365,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('warn', 'hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -374,7 +376,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logDebug('hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -385,7 +387,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logInfo('hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -396,7 +398,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logWarn('hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -407,7 +409,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logError('hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -425,7 +427,7 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: 'foo and bar'
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -452,7 +454,7 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: { foo: "and bar" }
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -478,7 +480,7 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: undefined
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
 
@@ -496,7 +498,7 @@ test.describe('passing additional data', () => {
                 additional: undefined,
                 alwaysLogAdditional: true
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -524,7 +526,7 @@ test.describe('passing additional data', () => {
                 additional: { foo: "and bar" },
                 stringifyAdditional: true
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -558,7 +560,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: undefined
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
@@ -582,7 +584,7 @@ test.describe('throwing errors', () => {
 
 
     test('error is thrown when "throwErr" is true with text of "main" message; "main" message is not logging, but "additional" is', async ({ page }) => {
-        const expectedErrorMessage = 'Error: [error] hello world';
+        const expectedErrorMessage = '[error] hello world';
         const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
@@ -592,7 +594,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: true
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
@@ -613,7 +615,7 @@ test.describe('throwing errors', () => {
     test('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
         const expectedMainMessage = '[error] hello world';
         const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
-        const expectedErrorMessage = 'Error: [error] this is an error'
+        const expectedErrorMessage = '[error] this is an error'
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -622,7 +624,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: new Error('this is an error')
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
@@ -645,7 +647,7 @@ test.describe('throwing errors', () => {
     test('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
         const expectedMainMessage = '[error] hello world';
         const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
-        const expectedErrorMessage = 'Error: [error] this is an error'
+        const expectedErrorMessage = '[error] this is an error'
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -654,7 +656,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: 'this is an error'
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
@@ -681,7 +683,7 @@ test.describe('cloning', () => {
             let logger = new window.Logger('root', 'foo')
                 .clone();
             logger.log('info', 'hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -693,7 +695,7 @@ test.describe('cloning', () => {
             let logger = new window.Logger('root')
                 .cloneAndAppendPrefix('foo');
             logger.log('info', 'hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -705,7 +707,7 @@ test.describe('cloning', () => {
             let logger = new window.Logger('root')
                 .cloneAndAppendPrefix('foo', 'bar');
             logger.log('info', 'hello world');
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -723,7 +725,7 @@ test.describe('alerts', () => {
             logger.log('info', 'hello world', {
                 alertMsg: true
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         page.on('dialog', async (dialog) => {
             const type = dialog.type();
             const msg = dialog.message();
@@ -751,7 +753,7 @@ test.describe('alerts', () => {
                 additional: 'some additional data',
                 alertMsg: true
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         page.on('dialog', async (dialog) => {
             const type = dialog.type();
             const msg = dialog.message();
@@ -794,7 +796,7 @@ test.describe('alerts', () => {
                 throwErr: 'this is an error 🤓🤓',
                 alertMsg: true
             });
-        }, 100);
+        }, regularTestPageFunctionRunningTimeout);
         page.on('dialog', async (dialog) => {
             const type = dialog.type();
             const msg = dialog.message();
