@@ -9,7 +9,6 @@ import v8toIstanbul from 'v8-to-istanbul';
 import fs from 'fs-extra';
 import path from 'path';
 
-
 const utilityFunctionsTimeout = 3000;
 const regularTestPageFunctionRunningTimeout = 750; // will fail if not enough time is provided
 
@@ -262,7 +261,7 @@ function getCoverageGatherer() {
         async saveCoverage() {
             // await fs.remove('coverage');
             const context = libReport.createContext({ coverageMap });
-            reports.create('html').execute(context);
+            reports.create(process.env.CI ? 'lcov' : 'html').execute(context);
         }
     }
 }
