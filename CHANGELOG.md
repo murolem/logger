@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.12](https://github.com/murolem/logger/compare/v0.1.11...v0.1.12) (2023-04-24)
+
+
+### Bug Fixes
+
+* fixed stringify optional object param, not preparing the ground for more tests ([af77ea7](https://github.com/murolem/logger/commit/af77ea70f40a290ded10bf0d32213a89ff7be114))
+
 ### [0.1.11](https://github.com/murolem/logger/compare/v0.1.10...v0.1.11) (2023-04-24)
 
 ### [0.1.10](https://github.com/murolem/logger/compare/v0.1.9...v0.1.10) (2023-04-24)
