@@ -25,38 +25,50 @@ export type MessageLogParams = {
 	additional: any,
 
 	/**
-	 * Log additional data (see {@link MessageLogParams.additional additional}) in case it is `undefined`?
-	 * 
-	 * To do that, set this to `true` or specify more options using an object.
+	 * Log additional data (see {@link MessageLogParams.additional additional}) in case it is `undefined`?.
 	 * 
 	 * @default false
 	 */
-	alwaysLogAdditional: boolean | Partial<{
-		/** 
-		 * A function that transforms the results or an array of strings and numbers 
-		 * that acts as an approved list for selecting the object properties that will be stringified. 
-		 * 
-		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
-		 */
-		replacer: ((this: any, key: string, value: any) => any) | (number | string)[] | null,
-		/** 
-		 * Adds indentation, white space, and line break characters to the 
-		 * return-value JSON text to make it easier to read. 
-		 * 
-		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
-		 */
-		space: string | number
-	}>,
+	alwaysLogAdditional: true,
 
 	/**
 	 * If `true`, stringifies given {@link MessageLogParams.additional additional} using {@link JSON.stringify} 
 	 * (see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify JSON docs on MDN}).
 	 * 
+	 * You can pass an object to configure more settings.
+	 * 
 	 * @throws `TypeError` if {@link MessageLogParams.additional additional} is {@link BigInt} or an object that contains circlular references.
 	 * 
 	 * @default false
 	 */
-	stringifyAdditional: boolean,
+	stringifyAdditional: true | Partial<{
+		/** 
+		 * A function that transforms the results. Alternitive for `replacerVal`.
+		 * 
+		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info.
+		 * 
+		 * @default null
+		 */
+		replacerFn: (this: any, key: string, value: any) => any | (number | string)[] | null,
+		/** 
+		 * An array of strings and numbers that acts as an approved list for selecting the object properties that will be stringified. 
+		 * Alternitive for `replacerFn`.
+		 * 
+		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info.
+		 * 
+		 * @default null
+		 */
+		replacerVal: (number | string)[] | null
+		/** 
+		 * Adds indentation, white space, and line break characters to the 
+		 * return-value JSON text to make it easier to read. 
+		 * 
+		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
+		 * 
+		 * @default 2
+		 */
+		space: string | number
+	}>,
 
 	/**
 	 * Throws an error after logging is done.
@@ -84,7 +96,7 @@ export type MessageLogParams = {
 	 * 
 	 * @default false
 	 */
-	alertMsg: boolean
+	alertMsg: true
 }
 
 /**
@@ -106,7 +118,7 @@ export type LogAliasFn = (msg: string, params?: Partial<MessageLogParams>) => vo
  * 
  * (see constructor for more details).
  */
-export default class Logger  {
+export default class Logger {
 	/**
 	 * An array of strings composing the prefix.
 	 */
@@ -223,46 +235,58 @@ export default class Logger  {
 	 */
 	log(level: LogLevel, msg: string, {
 		additional = undefined,
-		alwaysLogAdditional = false,
-		stringifyAdditional = false,
-		alertMsg = false,
+		alwaysLogAdditional,
+		stringifyAdditional,
+		alertMsg,
 		throwErr = false
 	}: Partial<MessageLogParams> = {}) {
 		const prefix = `[${level}${this.#prefixBody ? ` | ${this.#prefixBody}` : ''}] `;
 		const msgWithPrefix = prefix + msg;
 		const logMsg = throwErr !== true;
 
-		if(logMsg)
+		if (logMsg)
 			console.log(msgWithPrefix);
-	
+
 		const logAdditional = alwaysLogAdditional || additional !== undefined;
-		if(logAdditional)
-			console.log(prefix + 'дополнительные данные:\n',
-				stringifyAdditional ? JSON.stringify(additional, null, 2) : additional);
-		
-		if(alertMsg) {
+		if (logAdditional) {
+			if (stringifyAdditional) {
+				if (stringifyAdditional === true)
+					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(additional, null, 2));
+				else if (stringifyAdditional.replacerFn || stringifyAdditional.replacerVal || stringifyAdditional.space)
+					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(
+						additional, 
+						// @ts-ignore fuck off
+						stringifyAdditional.replacerFn ?? stringifyAdditional.replacerVal ?? null, 
+						stringifyAdditional.space ?? 2)
+					);
+			} else
+				console.log(prefix + 'дополнительные данные:\n', additional);
+		}
+
+
+		if (alertMsg) {
 			const parts = [
 				msgWithPrefix// + '\n\n'
 			];
 
-			if(logAdditional)
+			if (logAdditional)
 				parts.push('(см. дополнительные данные в консоли)');
-			if(throwErr)
+			if (throwErr)
 				parts.push('(см. сообщение об ошибке в консоли)');
 
 			let result;
-			if(parts.length === 1)
+			if (parts.length === 1)
 				result = parts[0];
 			else
-				result = parts[0] 
-				+ '\n\n' 
-				+ parts.slice(1).join('\n')
+				result = parts[0]
+					+ '\n\n'
+					+ parts.slice(1).join('\n')
 
 			alert(result);
 		}
-		
-		if(throwErr) {
-			if(typeof throwErr === 'string') // throwing custom message
+
+		if (throwErr) {
+			if (typeof throwErr === 'string') // throwing custom message
 				throw new Error(prefix + throwErr);
 			else if (throwErr instanceof Error) { // throwing the provided error
 				throwErr.message = prefix + throwErr.message;

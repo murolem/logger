@@ -8,6 +8,7 @@
     "build": "vite build",
     "test": "npx playwright test",
     "test:with-coverage": "npx playwright test --workers 1",
+    "test:with-coverage:light": "npm run test:with-coverage -- --project=chromium",
     "test-server": "vite dev",
     "sendit": "npm run add && npm run commit && npm run push",
     "fuckit": "npm run add && npm run commit && npm run release && npm run push",
