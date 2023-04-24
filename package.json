@@ -1,6 +1,6 @@
 {
   "name": "logger",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Logs messsages and arbitrary data to the console, can throw errors.",
   "main": "dist/index.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "test:with-coverage": "npx playwright test --workers 1",
     "test-server": "vite dev",
     "commit": "cz",
-    "release": "standard-version"
+    "release": "standard-version",
+    "publish": "git push --follow-tags origin dev"
   },
   "directories": {
     "test": "tests"
