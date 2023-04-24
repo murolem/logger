@@ -1,19 +1,33 @@
+// TODO test for json thing
+
+/**
+ * Additional-optional parameters used when logging.
+ */
 export type MessageLogParams = {
 	/**
-	 * Дополнительное значение для логгирования — может быть чем угодно (строка, объект и т.п.), исключая `undefined`.
-	 * Будет залогированно ниже основного значения, но до сообщения об ошибке (при наличии).
+	 * Additional data to log after "main" message. Can be of any type, including `null` or `undefined` (see below for more info).
 	 * 
-	 * К началу сообщения будет добавлена строка с префиксом (при наличии), текстом `[тут_префикс] дополнительные данные:` и переносом строки.
+	 * By default, given value is logged «as is» (so you can view it in your browser console), 
+	 * but can be stringified by setting {@link MessageLogParams.stringifyAdditional stringifyAdditional} option to `true` 
+	 * (see its docs for more info).
 	 * 
-	 * Если необходимо залоггировать `undefined`, задай {@link MessageLogParams.alwaysLogAdditional alwaysLogAdditional} в `true` — 
-	 * `undefined` будет логгироваться даже если это значение не задано.
+	 * If you value happens to be `undefined`, it will not be logged unless {@link MessageLogParams.alwaysLogAdditional alwaysLogAdditional} option is `true`
+	 * (see its docs for more info).
+	 * 
+	 * Data is logged in this format:
+	 * ```text
+	 * [<log level>] additional data:
+	 * 	<your data>
+	 * ```
 	 * 
 	 * @default undefined
 	 */
 	additional: any,
 
 	/**
-	 * Логгировать ли содержимое {@link MessageLogParams.additional additional} если оно `undefined`?
+	 * Log additional data (see {@link MessageLogParams.additional additional}) in case it is `undefined`?
+	 * 
+	 * To do that, set this to `true` or specify more options using an object.
 	 * 
 	 * @default false
 	 */
@@ -21,45 +35,52 @@ export type MessageLogParams = {
 		/** 
 		 * A function that transforms the results or an array of strings and numbers 
 		 * that acts as an approved list for selecting the object properties that will be stringified. 
+		 * 
+		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
 		 */
 		replacer: ((this: any, key: string, value: any) => any) | (number | string)[] | null,
 		/** 
 		 * Adds indentation, white space, and line break characters to the 
 		 * return-value JSON text to make it easier to read. 
+		 * 
+		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
 		 */
 		space: string | number
 	}>,
 
 	/**
-	 * Конвертирует значение {@link MessageLogParams.additional additional} в строку используя метод {@link JSON.stringify}.
+	 * If `true`, stringifies given {@link MessageLogParams.additional additional} using {@link JSON.stringify} 
+	 * (see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify JSON docs on MDN}).
 	 * 
-	 * @throw `TypeError`
-	 * 
-	 * Если значение {@link MessageLogParams.additional additional} содержит циклические ссылки или является типом {@link BigInt} 
+	 * @throws `TypeError` if {@link MessageLogParams.additional additional} is {@link BigInt} or an object that contains circlular references.
 	 * 
 	 * @default false
 	 */
 	stringifyAdditional: boolean,
 
 	/**
-	 * Позволяет выбросить исключение **после** сообщения или **вместо** него. Значение (и его тип) задают содержимое исключения:
-	 * - `boolean`:
-	 *    - если `true`, будет выброшено исключение с текстом основного сообщения `msg`, при этом основное сообщение **не будет** залогированно.
-	 *    - если `false`, исключения выброшено не будет.
-	 * - `Error` — объект исключения; будет выброшен как есть.
-	 * - `string` — текст исключения; будет создано новое исключение с этим текстом, оно будет выброшено после основного сообщения `msg`.
+	 * Throws an error after logging is done.
 	 * 
-	 * Хорошая практика — выбрасывать исключение только если логгируется сообщение с уровнем `error` — 
-	 * это позволит понять что что-то идет не так, если исключение было выброшено с другим уровнем логгирования.
+	 * You can pass here value of any of these types:
+	 * - `boolean`:
+	 *    - `true` → will throw `Error` with "main" message, but the message itself will not be logged.
+	 *    - `false` → no error will be thrown.
+	 * - `Error` — will be thrown "as-is".
+	 * - `string` — will create a new `Error` with given text.
+	 * 
+	 * **Note:** a good practice is to throw an error only on `error` log level — it just easier to read. 
 	 * 
 	 * @default false
 	 */
 	throwErr: boolean | Error | string,
 
 	/**
-	 * Показать ли всплывающее окно через `alert()` браузера для отображения основного сообщения `msg` и содержимого ошибки `throwErr` (при наличии)?
+	 * Do you want to show a modal window using `alert()`? Window will contain "main" message and 
+	 * the little notes telling you about whether there is {@link MessageLogParams.additional additional data} or {@link MessageLogParams.throwErr an error} being thrown.
 	 * 
-	 * Всплывающее окно будет показано после логгирования, но перед выбрасиванием исключения `throwErr` (при наличии).
+	 * "main" message and {@link MessageLogParams.additional additional} are logged before showing the modal, but in case of {@link MessageLogParams.throwErr an error} — it will be thrown after.
+	 * 
+	 * **Note:** works only in browser!
 	 * 
 	 * @default false
 	 */
@@ -67,46 +88,54 @@ export type MessageLogParams = {
 }
 
 /**
- * Уровень логгирования:
- * - `debug` — отладочные данные; рекомендуется использовать только в разработке или тестировании.
- * - `info` — любая информация, не являющаяся отладочной или предупреждением/ошибкой.
- * - `warn` — предупреждения.
- * - `error` ошибки.
+ * Levels of logging:
+ * - `debug` — for anything that should be visible only in development, examples: `hello world`, `test debug debug test`.
+ * - `info` — just for anything else that is not a warning/error or a debug message, examples: `module initilized`, `donuts baking in progress...`.
+ * - `warn` — warning that user should know about, but nothing critical that can totally stop the program, examples: `something-something is deprecated`, `<feature> is not supported`.
+ * - `error` — for anything bad, examples: `crash crash CRASH` or `oops, something went terribly wrong we're so sorry oopsie-daisy`.
  */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 /**
- * Тип для алиасов функций-логгеров для разных уровнев логгирования.
+ * Type for aliases of log levels, e.g. {@link Logger.logInfo}.
  */
 export type LogAliasFn = (msg: string, params?: Partial<MessageLogParams>) => void;
 
 /**
- * Утилита для логгирования.
+ * The logger utility (not an ultimate, very simple).
  * 
- * (см. конструктор за деталями).
+ * (see constructor for more details).
  */
 export default class Logger  {
 	/**
-	 * Массив строк, составляющих префикс.
+	 * An array of strings composing the prefix.
 	 */
 	#prefixParts: string[] = [];
 	/**
-	 * Тело префикса без уровня логгирования или ограничивающих символов в виде простой строки. 
+	 * A prefix ready-to-be-used. Upadtes when prefix changes. 
 	 */
 	#prefixBody: string | undefined;
 
 	/**
-	 * Утилита для логгирования.
+	 * The logger utility.
 	 * 
-	 * @param prefix Префикс для использования в каждом логгируемом сообщении. 
+	 * @param prefix a prefix or multiple prefixes to use when logging, like this: 
+	 * ```text
+	 * [<log level> | <prefix1> > <prefix2>] <message>
+	 * ```
+	 * e.g.
+	 * ```text
+	 * [info | root > body] hello world
+	 * ```
 	 * 
-	 * Если задан массив — каждое значние будет отдельной частью префикса. По умолчанию не задан.
+	 * If no prefixes are given, only the log level is present, like this:
+	 * ```text
+	 * [info] hello world
+	 * ```
 	 * 
-	 * Можно добавить новые части через {@link appendPrefix} или создать копию этого класса через {@link cloneAndAppendPrefix}.
+	 * You can add new prefixes using {@link appendPrefix} or create a copy of this logger and add new prefixes — with {@link cloneAndAppendPrefix}.
 	 * 
-	 * При логгировании выглядит как: `[префикс1 > префикс 2]`.
-	 * 
-	 * ---
+	 * @default undefined
 	 */
 	constructor(...prefix: string[]) {
 		this.appendPrefix(...prefix);
