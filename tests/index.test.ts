@@ -1,7 +1,7 @@
 // import { test, expect } from 'playwright-test-coverage';
 import { test, expect, type Page, JSHandle, ConsoleMessage } from '@playwright/test';
-import { LogAliasFn, LogLevel, Logger } from '../src/index';
-import { UncertianPromiseResult, UncertianPromiseResultSuccess, UncertianResultFailure } from './types/UncertianPromise';
+import Logger from '../src/index';
+import { UncertianPromiseResult, UncertianPromiseResultSuccess } from './types/UncertianPromise';
 import libCoverage from 'istanbul-lib-coverage';
 import libReport from 'istanbul-lib-report';
 import reports from 'istanbul-reports';

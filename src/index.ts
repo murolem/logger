@@ -85,7 +85,7 @@ export type LogAliasFn = (msg: string, params?: Partial<MessageLogParams>) => vo
  * 
  * (см. конструктор за деталями).
  */
-export class Logger  {
+export default class Logger  {
 	/**
 	 * Массив строк, составляющих префикс.
 	 */
