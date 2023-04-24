@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.6](https://github.com/murolem/logger/compare/v0.1.5...v0.1.6) (2023-04-24)
+
+
+### Bug Fixes
+
+* removed extra logging about the CI variable ([94f29aa](https://github.com/murolem/logger/commit/94f29aaa6ab6e1c8f462af73499b5ca3e2a5fb2b))
+
 ### [0.1.5](https://github.com/Eleseer/logger/compare/v0.1.4...v0.1.5) (2023-04-24)
 
 
