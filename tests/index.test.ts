@@ -423,7 +423,7 @@ test.describe('log levels', () => {
 test.describe('passing additional data', () => {
     test('logging "main" message and "additinal" as string, when "additional" is string "foo and bar"', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'foo and bar'];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', 'foo and bar'];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -450,7 +450,7 @@ test.describe('passing additional data', () => {
 
     test('logging "main" message and "additinal" as object, when "additional" is object "{ foo: "and bar" }"', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', { foo: "and bar" }];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', { foo: "and bar" }];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -493,7 +493,7 @@ test.describe('passing additional data', () => {
 
     test('logging "main" message and "additinal" when: (1) "additional" is "undefined" & (2) "alwaysLogAdditional" is "true"', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', undefined];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', undefined];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -522,7 +522,7 @@ test.describe('passing additional data', () => {
     test.describe('stringify additional with stringifyAdditional = true setting', () => {
         test('"additional" is object "{ hello: "world", foo: "bar" }"', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', JSON.stringify({ foo: "and bar" })];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: "and bar" })];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
@@ -550,7 +550,7 @@ test.describe('passing additional data', () => {
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", replacer is an array ["hello"]', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', JSON.stringify({ hello: "world" })];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "world" })];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
@@ -580,7 +580,7 @@ test.describe('passing additional data', () => {
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", replacer is a function that replaces "hello" property value with "bar"', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', JSON.stringify({ hello: "bar", foo: 'bar' })];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "bar", foo: 'bar' })];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
@@ -610,7 +610,7 @@ test.describe('passing additional data', () => {
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", "space" is set to 4', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', JSON.stringify({ hello: "world", foo: 'bar' }, null, 4)];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "world", foo: 'bar' }, null, 4)];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
@@ -643,7 +643,7 @@ test.describe('passing additional data', () => {
 test.describe('throwing errors', () => {
     test('no error is thrown when "throwErr" is undefined or false; "main" message "hello world" and "additional" message "foo and bar" are logging', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'foo and bar'];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', 'foo and bar'];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -680,7 +680,7 @@ test.describe('throwing errors', () => {
 
     test('error is thrown when "throwErr" is true with text of "main" message; "main" message is not logging, but "additional" is', async ({ page }) => {
         const expectedErrorMessage = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
+        const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -709,7 +709,7 @@ test.describe('throwing errors', () => {
 
     test('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
         const expectedMainMessage = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
+        const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
         const expectedErrorMessage = '[error] this is an error'
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
@@ -741,7 +741,7 @@ test.describe('throwing errors', () => {
 
     test('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
         const expectedMainMessage = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] дополнительные данные:\n', 'foo and bar'];
+        const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
         const expectedErrorMessage = '[error] this is an error'
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
@@ -838,9 +838,9 @@ test.describe('alerts', () => {
 
     test('alert "hello world" messsage and a little note saying there is additional data in console, when `alertMsg` is true, also logging it and additional string "some additional data" to console', async ({ page }) => {
         const expectedMainMessage = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'some additional data'];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', 'some additional data'];
         const expectedAlertMessage = '[info] hello world'
-            + '\n\n(см. дополнительные данные в консоли)';
+            + '\n\n(see additional data in the console)';
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
@@ -878,11 +878,11 @@ test.describe('alerts', () => {
 
     test('alert "hello world" messsage and a little note saying there is additional data + an error in console, when `alertMsg` is true, also logging it and additional string "some additional data" to console, then throwing an error', async ({ page }) => {
         const expectedMainMessage = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] дополнительные данные:\n', 'some additional data'];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', 'some additional data'];
         const expectedErrorMessage = 'this is an error 🤓🤓';
         const expectedAlertMessage = '[info] hello world'
-            + '\n\n(см. дополнительные данные в консоли)'
-            + '\n(см. сообщение об ошибке в консоли)';
+            + '\n\n(see additional data in the console)'
+            + '\n(see an error messaage in the console)';
 
         const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();

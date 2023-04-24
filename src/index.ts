@@ -1,5 +1,3 @@
-// TODO test for json thing
-
 /**
  * Additional-optional parameters used when logging.
  */
@@ -145,12 +143,10 @@ export default class Logger {
 	}
 
 	/**
-	 * Добавляет новый префикс (или несколько, если это массив) к уже используемым префиксам.
+	 * Append a new prefix to current ones.
 	 * 
-	 * См. конструктор за подробностями.
-	 * 
-	 * @param prefix префикс или массив префиксов.
-	 * @returns инстанс этого класса.
+	 * @param prefix prefix or multiple prefixes.
+	 * @returns this.
 	 */
 	appendPrefix(...prefix: string[]): Logger {
 		this.#prefixParts.push(...prefix);
@@ -160,69 +156,69 @@ export default class Logger {
 	}
 
 	/**
-	 * Создает копию этого класса с используемыми в нем префиксами.
+	 * Creates a copy of this class (prefixes are kept!).
 	 * 
-	 * @returns новый инстанс-копию этого класса.
+	 * @returns a new {@link Logger} instance.
 	 */
 	clone = () => {
 		return new Logger(...this.#prefixParts);
 	}
 
 	/**
-	 * Создает копию этого класса с используемыми в нем префиксами, добавляя к ним заданный префикс или массив префиксов `prefix`.
+	 * Creates a copy of this class (prefixes are kept!) and appends to it a new prefix or multiple prefixes.
 	 * 
-	 * @param prefix префикс или массив префиксов.
-	 * @returns новый инстанс-копию этого класса.
+	 * @param prefix prefix or multiple prefixes.
+	 * @returns a new {@link Logger} instance.
 	 */
 	cloneAndAppendPrefix(...prefix: string[]) {
 		return this.clone().appendPrefix(...prefix);
 	}
 
 	/**
-	 * Логгирует сообщение {@link msg} с уровнем `debug` и параметрами `params` (при наличии).
+	 * Logs {@link msg} using `debug` log level and optional `params`.
 	 * 
-	 * @param msg логгируемое сообщение.
-	 * @param params дополнительные параметры.
+	 * @param msg a message to log.
+	 * @param params optional params.
 	 */
 	logDebug = (msg: string, params: Partial<MessageLogParams> = {}): void => {
 		this.log('debug', msg, params);
 	}
 
 	/**
-	 * Логгирует сообщение {@link msg} с уровнем `info` и параметрами `params` (при наличии).
+	 * Logs {@link msg} using `info` log level and optional `params`.
 	 * 
-	 * @param msg логгируемое сообщение.
-	 * @param params дополнительные параметры.
+	 * @param msg a message to log.
+	 * @param params optional params.
 	 */
 	logInfo = (msg: string, params: Partial<MessageLogParams> = {}): void => {
 		this.log('info', msg, params);
 	}
 
 	/**
-	 * Логгирует сообщение {@link msg} с уровнем `warn` и параметрами `params` (при наличии).
+	 * Logs {@link msg} using `warn` log level and optional `params`.
 	 * 
-	 * @param msg логгируемое сообщение.
-	 * @param params дополнительные параметры.
+	 * @param msg a message to log.
+	 * @param params optional params.
 	 */
 	logWarn = (msg: string, params: Partial<MessageLogParams> = {}): void => {
 		this.log('warn', msg, params);
 	}
 
 	/**
-	 * Логгирует сообщение {@link msg} с уровнем `error`
+	 * Logs {@link msg} using `error` log level and optional `params`.
 	 * 
-	 * @param msg логгируемое сообщение.
-	 * @param params дополнительные параметры.
+	 * @param msg a message to log.
+	 * @param params optional params.
 	 */
 	logError = (msg: string, params: Partial<MessageLogParams> = {}): void => {
 		this.log('error', msg, params);
 	}
 
 	/**
-	 * Логгирует сообщение {@link msg} с уровнем {@link level}.
+	 * Logs {@link msg} using {@link level} log level.
 	 * 
-	 * @param level Уровень логгирования.
-	 * @param msg Сообщение.
+	 * @param level log level.
+	 * @param msg a message to log.
 	 */
 	log(level: LogLevel, msg: string, {
 		additional = undefined,
@@ -242,16 +238,16 @@ export default class Logger {
 		if (logAdditional) {
 			if (stringifyAdditional) {
 				if (stringifyAdditional === true) // just boolean value
-					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(additional));
+					console.log(prefix + 'additional data:\n', JSON.stringify(additional));
 				else // an object
-					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(
+					console.log(prefix + 'additional data:\n', JSON.stringify(
 						additional, 
 						// @ts-ignore fuck off
 						stringifyAdditional.replacer, 
 						stringifyAdditional.space)
 					);
 			} else
-				console.log(prefix + 'дополнительные данные:\n', additional);
+				console.log(prefix + 'additional data:\n', additional);
 		}
 
 		if (alertMsg) {
@@ -260,9 +256,9 @@ export default class Logger {
 			];
 
 			if (logAdditional)
-				parts.push('(см. дополнительные данные в консоли)');
+				parts.push('(see additional data in the console)');
 			if (throwErr)
-				parts.push('(см. сообщение об ошибке в консоли)');
+				parts.push('(see an error messaage in the console)');
 
 			let result;
 			if (parts.length === 1)
