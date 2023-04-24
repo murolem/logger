@@ -102,14 +102,14 @@ export class Logger  {
 	 * 
 	 * Если задан массив — каждое значние будет отдельной частью префикса. По умолчанию не задан.
 	 * 
-	 * Можно добавить новые части через {@link appendPrefix} или создать копию этого класса через {@link appendPrefixAndClone}.
+	 * Можно добавить новые части через {@link appendPrefix} или создать копию этого класса через {@link cloneAndAppendPrefix}.
 	 * 
 	 * При логгировании выглядит как: `[префикс1 > префикс 2]`.
 	 * 
 	 * ---
 	 */
-	constructor(prefix: string | string[] = []) {
-		this.appendPrefix(prefix);
+	constructor(...prefix: string[]) {
+		this.appendPrefix(...prefix);
 	}
 
 	/**
@@ -120,8 +120,8 @@ export class Logger  {
 	 * @param prefix префикс или массив префиксов.
 	 * @returns инстанс этого класса.
 	 */
-	appendPrefix(prefix: string | string[]): Logger {
-		this.#prefixParts.push(...(Array.isArray(prefix) ? prefix : [prefix]));
+	appendPrefix(...prefix: string[]): Logger {
+		this.#prefixParts.push(...prefix);
 		this.#prefixBody = this.#prefixParts.join(' > ');
 
 		return this;
@@ -133,7 +133,7 @@ export class Logger  {
 	 * @returns новый инстанс-копию этого класса.
 	 */
 	clone = () => {
-		return new Logger(this.#prefixParts);
+		return new Logger(...this.#prefixParts);
 	}
 
 	/**
@@ -142,8 +142,8 @@ export class Logger  {
 	 * @param prefix префикс или массив префиксов.
 	 * @returns новый инстанс-копию этого класса.
 	 */
-	appendPrefixAndClone(prefix: string | string[]) {
-		return this.clone().appendPrefix(prefix);
+	cloneAndAppendPrefix(...prefix: string[]) {
+		return this.clone().appendPrefix(...prefix);
 	}
 
 	/**
@@ -213,14 +213,23 @@ export class Logger  {
 		
 		if(alertMsg) {
 			const parts = [
-				msgWithPrefix + '\n\n'
+				msgWithPrefix// + '\n\n'
 			];
 
 			if(logAdditional)
-				parts.push('(см. дополнительные данные в консоли)\n');
+				parts.push('(см. дополнительные данные в консоли)');
 			if(throwErr)
 				parts.push('(см. сообщение об ошибке в консоли)');
-			alert(parts.join(''));
+
+			let result;
+			if(parts.length === 1)
+				result = parts[0];
+			else
+				result = parts[0] 
+				+ '\n\n' 
+				+ parts.slice(1).join('\n')
+
+			alert(result);
 		}
 		
 		if(throwErr) {

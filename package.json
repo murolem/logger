@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npx playwright test",
     "test:with-coverage": "npx playwright test --workers 1",
-    "test-server": "vite dev"
+    "test-server": "vite dev",
+    "commit": "cz"
   },
   "directories": {
     "test": "tests"
@@ -18,6 +19,7 @@
     "@types/istanbul-lib-report": "^3.0.0",
     "@types/istanbul-reports": "^3.0.1",
     "babel-plugin-istanbul": "^6.1.1",
+    "cz-conventional-changelog": "^3.3.0",
     "fs-extra": "^11.1.1",
     "istanbul-lib-coverage": "^3.2.0",
     "istanbul-lib-report": "^3.0.0",
@@ -29,5 +31,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
