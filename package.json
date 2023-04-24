@@ -9,7 +9,7 @@
     "test": "npx playwright test",
     "test:with-coverage": "npx playwright test --workers 1",
     "test-server": "vite dev",
-    "out": "npm run add && npm run commit && npm run release && npm run push",
+    "fuckit": "npm run add && npm run commit && npm run release && npm run push",
     "add": "git add .",
     "commit": "cz",
     "release": "standard-version",

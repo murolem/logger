@@ -22,7 +22,7 @@ jobs:
         touch .env
         echo CI=true >> .env
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npm run test:with-coverage
     - uses: actions/upload-artifact@v3
       if: always()
       with:
