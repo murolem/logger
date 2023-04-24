@@ -9,9 +9,11 @@
     "test": "npx playwright test",
     "test:with-coverage": "npx playwright test --workers 1",
     "test-server": "vite dev",
+    "out": "npm run add && npm run commit && npm run release && npm run push",
+    "add": "git add .",
     "commit": "cz",
     "release": "standard-version",
-    "publish": "git push --follow-tags origin dev"
+    "push": "git push --follow-tags origin dev"
   },
   "directories": {
     "test": "tests"
@@ -30,7 +32,6 @@
     "istanbul-lib-report": "^3.0.0",
     "istanbul-reports": "^3.1.5",
     "playwright-test-coverage": "^1.2.12",
-    "standard-version": "^9.5.0",
     "typescript": "^5.0.4",
     "v8-to-istanbul": "^9.1.0",
     "vite": "^4.2.2"
