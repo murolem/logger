@@ -25,7 +25,7 @@ export type MessageLogParams = {
 	additional: any,
 
 	/**
-	 * Log additional data (see {@link MessageLogParams.additional additional}) in case it is `undefined`?.
+	 * Log additional data (see {@link MessageLogParams.additional additional}) in case it is `undefined`?
 	 * 
 	 * @default false
 	 */
@@ -43,29 +43,20 @@ export type MessageLogParams = {
 	 */
 	stringifyAdditional: true | Partial<{
 		/** 
-		 * A function that transforms the results. Alternitive for `replacerVal`.
+		 * A function that transforms the results or an array of whitelisted object keys (as strings and numbers).
 		 * 
 		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info.
 		 * 
-		 * @default null
+		 * @default undefined
 		 */
-		replacerFn: (this: any, key: string, value: any) => any | (number | string)[] | null,
-		/** 
-		 * An array of strings and numbers that acts as an approved list for selecting the object properties that will be stringified. 
-		 * Alternitive for `replacerFn`.
-		 * 
-		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info.
-		 * 
-		 * @default null
-		 */
-		replacerVal: (number | string)[] | null
+		replacer: ((this: any, key: string, value: any) => any) | (number | string)[] | null,
 		/** 
 		 * Adds indentation, white space, and line break characters to the 
 		 * return-value JSON text to make it easier to read. 
 		 * 
 		 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
 		 * 
-		 * @default 2
+		 * @default undefined
 		 */
 		space: string | number
 	}>,
@@ -250,19 +241,18 @@ export default class Logger {
 		const logAdditional = alwaysLogAdditional || additional !== undefined;
 		if (logAdditional) {
 			if (stringifyAdditional) {
-				if (stringifyAdditional === true)
-					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(additional, null, 2));
-				else if (stringifyAdditional.replacerFn || stringifyAdditional.replacerVal || stringifyAdditional.space)
+				if (stringifyAdditional === true) // just boolean value
+					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(additional));
+				else // an object
 					console.log(prefix + 'дополнительные данные:\n', JSON.stringify(
 						additional, 
 						// @ts-ignore fuck off
-						stringifyAdditional.replacerFn ?? stringifyAdditional.replacerVal ?? null, 
-						stringifyAdditional.space ?? 2)
+						stringifyAdditional.replacer, 
+						stringifyAdditional.space)
 					);
 			} else
 				console.log(prefix + 'дополнительные данные:\n', additional);
 		}
-
 
 		if (alertMsg) {
 			const parts = [
