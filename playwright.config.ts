@@ -2,8 +2,6 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log('CI variable: ' + process.env.CI);
-
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv

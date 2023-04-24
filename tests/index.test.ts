@@ -299,6 +299,10 @@ async function saveV8Coverage(page: Page): Promise<void> {
     reports.create('html').execute(context);
 }
 
+test.beforeAll(() => {
+    console.log('CI variable: ' + process.env.CI);
+});
+
 let { gatherCoverageForPage, saveCoverage } = getCoverageGatherer();
 test.beforeEach(async ({ page, browserName }, workerInfo) => {
     await page.goto('http://127.0.0.1:3000');
