@@ -1,6 +1,6 @@
 {
   "name": "logger",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Logs messsages and arbitrary data to the console, can throw errors.",
   "main": "dist/index.js",
   "type": "module",

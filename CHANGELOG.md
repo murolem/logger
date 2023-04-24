@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.7](https://github.com/murolem/logger/compare/v0.1.6...v0.1.7) (2023-04-24)
+
+
+### Bug Fixes
+
+* fixed imports after changing the exports + disabled spamming of CI variable to console ([2e7b6ed](https://github.com/murolem/logger/commit/2e7b6ed240a7ce4fe2610bc3e26217e27eadc117))
+
 ### [0.1.6](https://github.com/murolem/logger/compare/v0.1.5...v0.1.6) (2023-04-24)
 
 
