@@ -15,7 +15,7 @@
     "add": "git add .",
     "commit": "cz",
     "release": "standard-version",
-    "push": "git push --follow-tags origin dev"
+    "push": "git push --follow-tags origin"
   },
   "directories": {
     "test": "tests"
