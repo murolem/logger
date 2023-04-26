@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.2.0](https://github.com/murolem/logger/compare/v0.1.14...v0.2.0) (2023-04-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* changed package name
+
+### Bug Fixes
+
+* changaed package name to a scoped one ([871d4e4](https://github.com/murolem/logger/commit/871d4e4891743e2678e651bb966df48797db9b4e))
+
+### [0.1.13](https://github.com/murolem/logger/compare/v0.1.12...v0.1.13) (2023-04-24)
+
 ### [0.1.14](https://github.com/murolem/logger/compare/v0.1.12...v0.1.14) (2023-04-26)
 
 ### [0.1.13](https://github.com/murolem/logger/compare/v0.1.12...v0.1.13) (2023-04-26)
