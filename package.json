@@ -1,5 +1,5 @@
 {
-  "name": "logger",
+  "name": "@aliser/logger",
   "version": "0.1.14",
   "description": "Logs messsages and arbitrary data to the console, can throw errors.",
   "main": "dist/index.js",
