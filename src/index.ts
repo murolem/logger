@@ -160,7 +160,7 @@ export default class Logger {
 	 * 
 	 * @returns a new {@link Logger} instance.
 	 */
-	clone = () => {
+	clone() {
 		return new Logger(...this.#prefixParts);
 	}
 
@@ -180,7 +180,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logDebug = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logDebug(msg: string, params: Partial<MessageLogParams> = {}): void {
 		this.log('debug', msg, params);
 	}
 
@@ -190,7 +190,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logInfo = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logInfo(msg: string, params: Partial<MessageLogParams> = {}): void {
 		this.log('info', msg, params);
 	}
 
@@ -200,7 +200,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logWarn = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logWarn(msg: string, params: Partial<MessageLogParams> = {}): void {
 		this.log('warn', msg, params);
 	}
 
@@ -210,7 +210,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logError = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logError (msg: string, params: Partial<MessageLogParams> = {}): void {
 		this.log('error', msg, params);
 	}
 

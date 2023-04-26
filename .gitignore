@@ -89,7 +89,10 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# keep output folder there so that the package can be installed as is
+# dist 
+# just a test file
+test.ts
 
 # Gatsby files
 .cache/
