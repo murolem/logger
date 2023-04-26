@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/murolem/logger/compare/v0.2.0...v0.2.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* fixed lockfile after module name change ([06ca5ed](https://github.com/murolem/logger/commit/06ca5ed3c0092d72fcb91b8a784a7b575fcd99f7))
+
 ## [0.2.0](https://github.com/murolem/logger/compare/v0.1.14...v0.2.0) (2023-04-26)
 
 
