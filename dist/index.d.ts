@@ -130,53 +130,53 @@ export default class Logger {
      * @param prefix prefix or multiple prefixes.
      * @returns this.
      */
-    appendPrefix(...prefix: string[]): Logger;
+    appendPrefix: (...prefix: string[]) => Logger;
     /**
      * Creates a copy of this class (prefixes are kept!).
      *
      * @returns a new {@link Logger} instance.
      */
-    clone(): Logger;
+    clone: () => Logger;
     /**
      * Creates a copy of this class (prefixes are kept!) and appends to it a new prefix or multiple prefixes.
      *
      * @param prefix prefix or multiple prefixes.
      * @returns a new {@link Logger} instance.
      */
-    cloneAndAppendPrefix(...prefix: string[]): Logger;
+    cloneAndAppendPrefix: (...prefix: string[]) => Logger;
     /**
      * Logs {@link msg} using `debug` log level and optional `params`.
      *
      * @param msg a message to log.
      * @param params optional params.
      */
-    logDebug(msg: string, params?: Partial<MessageLogParams>): void;
+    logDebug: (msg: string, params?: Partial<MessageLogParams>) => void;
     /**
      * Logs {@link msg} using `info` log level and optional `params`.
      *
      * @param msg a message to log.
      * @param params optional params.
      */
-    logInfo(msg: string, params?: Partial<MessageLogParams>): void;
+    logInfo: (msg: string, params?: Partial<MessageLogParams>) => void;
     /**
      * Logs {@link msg} using `warn` log level and optional `params`.
      *
      * @param msg a message to log.
      * @param params optional params.
      */
-    logWarn(msg: string, params?: Partial<MessageLogParams>): void;
+    logWarn: (msg: string, params?: Partial<MessageLogParams>) => void;
     /**
      * Logs {@link msg} using `error` log level and optional `params`.
      *
      * @param msg a message to log.
      * @param params optional params.
      */
-    logError(msg: string, params?: Partial<MessageLogParams>): void;
+    logError: (msg: string, params?: Partial<MessageLogParams>) => void;
     /**
      * Logs {@link msg} using {@link level} log level.
      *
      * @param level log level.
      * @param msg a message to log.
      */
-    log(level: LogLevel, msg: string, { additional, alwaysLogAdditional, stringifyAdditional, alertMsg, throwErr }?: Partial<MessageLogParams>): void;
+    log: (level: LogLevel, msg: string, { additional, alwaysLogAdditional, stringifyAdditional, alertMsg, throwErr }?: Partial<MessageLogParams>) => void;
 }

@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --emitDeclarationOnly",
-    "test": "npx playwright test",
-    "test:with-coverage": "npx playwright test --workers 1",
+    "test": "playwright test",
+    "test:with-coverage": "playwright test --workers 1",
     "test:with-coverage:light": "npm run test:with-coverage -- --project=chromium",
     "test-server": "vite dev",
     "sendit": "npm run add && npm run commit && npm run push",

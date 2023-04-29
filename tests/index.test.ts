@@ -339,6 +339,17 @@ test('logs a "hello world" message', async ({ page }) => {
     expect(consoleEvents[0].msg).toBe('[info] hello world');
 });
 
+test('logs a "hello world" message when destructured', async ({ page }) => {
+    const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+        let { log } = new window.Logger();
+        log('info', 'hello world');
+    }, regularTestPageFunctionRunningTimeout);
+    const consoleEvents = await consoleEventsPromise;
+
+    expect(consoleEvents.length).toBe(1);
+    expect(consoleEvents[0].msg).toBe('[info] hello world');
+});
+
 test.describe('prefixes', () => {
     test('logs a "hello world" message with a "root" prefix', async ({ page }) => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
