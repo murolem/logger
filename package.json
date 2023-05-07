@@ -14,7 +14,7 @@
     "test:e2e": "playwright test",
     "test:e2e:chormium-only": "npm run test:e2e -- --project=chromium",
     "test:e2e:coverage": "cross-env COVERAGE=true playwright test",
-    "test:e2e:coverage:chromium-only": "cross-env COVERAGE=true npm run test:e2e:coverage -- --project=chromium",
+    "test:e2e:coverage:chromium-only": "npm run test:e2e:coverage -- --project=chromium",
     "test:e2e:server": "vite dev",
     "sendit": "npm run add && npm run commit && npm run push",
     "fuckit": "npm run add && npm run commit && npm run release && npm run push",

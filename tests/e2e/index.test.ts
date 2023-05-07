@@ -788,8 +788,6 @@ function getCoverageGatherer() {
         },
         /** Generates coverage report from gathered data and writes it to disk. */
         async generateAndSaveCoverageReport() {
-            // await fs.remove('coverage');
-
             const uniqueDirSuffix = randomString({ length: 8, type: 'distinguishable' });
 
             const context = libReport.createContext({ coverageMap, dir: path.join('./coverage/e2e', `report-chunk-${uniqueDirSuffix}`) });
