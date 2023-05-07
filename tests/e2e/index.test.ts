@@ -1,22 +1,25 @@
-// import { test, expect } from 'playwright-test-coverage';
 import { test, expect, type Page, JSHandle, ConsoleMessage } from '@playwright/test';
-import Logger from '../src/index';
-import { UncertianPromiseResult, UncertianPromiseResultSuccess } from './types/UncertianPromise';
 import libCoverage from 'istanbul-lib-coverage';
 import libReport from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
 import v8toIstanbul from 'v8-to-istanbul';
-import fs from 'fs-extra';
 import path from 'path';
+import randomString from 'crypto-random-string';
+import Logger from '$src';
+import dotenv from 'dotenv';
+// read env variables
+dotenv.config();
 
-const utilityFunctionsTimeout = 3000;
-const regularTestPageFunctionRunningTimeout = 750; // will fail if not enough time is provided
+const consoleListeningDurationMs = 750; // will fail if not enough time is provided
 
-class TimeoutError extends Error {
-    constructor(msg?: string) {
-        super(msg);
-    }
-}
+/**
+ * Console messages to ignore in console events. 
+ */
+const consoleMessagesToIgnore = [
+    '[vite] connected.', // printed when vite server is started (i.e. when each test is run)
+    'Failed to load resource: the server responded with a status of 404 (Not Found)' // printed because of missing favicon (im not adding one)
+];
+
 
 // Logger is made available throught the index.html file by exposing its class in the `window` object.
 declare global {
@@ -25,314 +28,31 @@ declare global {
     }
 }
 
-/**
- * Console messages to ignore in `console` events completely. 
- */
-const consoleMessagesToIgnore = [
-    '[vite] connected.', // printed when vite server is started
-    'Failed to load resource: the server responded with a status of 404 (Not Found)' // printed for missing favicon (im not adding one)
-];
-
-/**
- * Data of a console event (`console.log()` and such). 
- */
-type ConsoleEventData = {
-    msg: string,
-    args: JSHandle[],
-    type: string
-}
-
-async function wait(duration: number) {
-    return new Promise((resolve) => setTimeout(resolve, duration));
-}
-
-async function runFnAndGatherConsoleEventsForDuration<T extends any, A extends Record<string, any>>(page: Page, fn: (arg: A) => T | Promise<T>, duration: number, {
-    specificMessage,
-    additionalMessagesToIgnore = [],
-    args,
-}: Partial<{
-    /** filter for a specific console message */
-    specificMessage: string,
-    /** filter for a specific console messages */
-    additionalMessagesToIgnore: string[],
-    /** additional data to pass to {@link fn} as an argument */
-    args: A
-}> = {}): Promise<{ consoleEventsPromise: Promise<ConsoleEventData[]>, pageFnRunnerPromise: Promise<T> }> {
-    const consoleEventsPromise = gatherConsoleEventsForDuration(page, duration, {
-        specificMessage,
-        additionalMessagesToIgnore
-    });
-    // @ts-ignore i dont understand you typescript
-    const pageFnRunnerPromise = page.evaluate(fn, args);
-
-    return { consoleEventsPromise, pageFnRunnerPromise };
-}
-
-async function gatherConsoleEventsForDuration(page: Page, duration: number, {
-    specificMessage,
-    additionalMessagesToIgnore = [],
-}: Partial<{
-    /** filter for a specific console message */
-    specificMessage: string,
-    /** filter for a specific console messages */
-    additionalMessagesToIgnore: string[]
-}> = {}): Promise<ConsoleEventData[]> {
-    const consoleEventDataRecords: ConsoleEventData[] = [];
-
-    const consoleEventListener = async (e: ConsoleMessage) => {
-        const msg = e.text();
-        const type = e.type();
-        const args = e.args();
-
-        const isBlacklisted = consoleMessagesToIgnore.includes(msg) || additionalMessagesToIgnore.includes(msg);
-        if (isBlacklisted)
-            return false;
-
-        const isSpecificMessageSet = !!specificMessage;
-        if (isSpecificMessageSet && msg !== specificMessage)
-            return false;
-
-        consoleEventDataRecords.push({ msg, type, args });
-
-        return false;
-    }
-    page.addListener('console', consoleEventListener);
-
-    await wait(duration)
-    // .catch(err => { throw new Error('got an error: ' + err)});
-    page.removeListener('console', consoleEventListener);
-
-    return consoleEventDataRecords;
-}
-
-/**
- * Attaches a listener for {@link page} console events, then runs the function {@link fn} within the {@link page} context.
- * 
- * **Note:** {@link page} context is isolated, meaning function {@link fn} should not have any references to the context of this script. 
- * Data can be passed as an argument to function {@link fn} by using {@link args} variable.
- * 
- * Listener is configured to listen to messages that meet **all** these conditions:
- * - Message is not in {@link consoleMessagesToIgnore} or {@link additionalMessagesToIgnore} (if defined)
- * - Message is equal to {@link specificMessage} (if defined)
- * 
- * If no matching event happened within the `timeout` ms, the promise is rejected.
- * 
- * @param page a browser page
- * @param fn a function to run within the {@link page} context
- */
-async function runFnAndWaitForConsoleEvent<T extends any>(page: Page, fn: (args: T) => void, {
-    timeout = utilityFunctionsTimeout,
-    specificMessage,
-    additionalMessagesToIgnore = [],
-    args,
-}: Partial<{
-    /** how much time in ms to wait before rejecting */
-    timeout: number,
-    /** filter for a specific console message */
-    specificMessage: string,
-    /** filter for a specific console messages */
-    additionalMessagesToIgnore: string[]
-    /** additional data to pass to {@link fn} as an argument */
-    args: T
-}> = {}): UncertianPromiseResult<ConsoleEventData> {
-    const consoleEventPromise = waitForConsoleEvent(page, { timeout, specificMessage, additionalMessagesToIgnore });
-    await page.evaluate(fn as any, args);
-
-    const consoleEventResult = await consoleEventPromise;
-
-    return consoleEventResult;
-}
-
-/**
- * Waits for a {@link page} console event matching given conditions, then returns the event data.
- * 
- * Listener is configured to listen to messages that meet **all** these conditions:
- * - Message is not in {@link consoleMessagesToIgnore} or {@link additionalMessagesToIgnore} (if defined)
- * - Message is equal to {@link specificMessage} (if defined)
- * 
- * If no matching event happened within the `timeout` ms, the promise is rejected.
- * 
- * @param page a browser page
- */
-async function waitForConsoleEvent(page: Page, {
-    timeout = utilityFunctionsTimeout,
-    specificMessage,
-    additionalMessagesToIgnore = []
-}: Partial<{
-    timeout: number,
-    specificMessage: string,
-    additionalMessagesToIgnore: string[]
-}> = {}): UncertianPromiseResult<ConsoleEventData> {
-    const consoleEventResult = await runAsyncFnWithTimeout(async () => {
-        const consoleEventPromise = page.waitForEvent('console', {
-            async predicate(msgPromise) {
-                const msg = (await msgPromise).text();
-
-                const isBlacklisted = consoleMessagesToIgnore.includes(msg) || additionalMessagesToIgnore.includes(msg);
-                if (isBlacklisted)
-                    return false;
-
-                const isSpecificMessageSet = !!specificMessage;
-                if (isSpecificMessageSet)
-                    return msg === specificMessage;
-
-                return true;
-            }
-        });
-
-        return consoleEventPromise;
-    }, timeout)
-        .then(({ result }) => ({
-            success: true as const,
-            result: {
-                msg: result.text(),
-                args: result.args(),
-                type: result.type()
-            }
-        }))
-        .catch(r => {
-            const { success, reason } = r;
-            if (success === false && reason instanceof TimeoutError)
-                return {
-                    success: false as const,
-                    reason: `timeout (${timeout} ms) while waiting for a console event`
-                };
-            else
-                throw new Error(r);
-        });
-
-    return consoleEventResult;
-}
-
-/**
- * Runs given async function {@link fn} until it's done or time {@link timeout} runs out. 
- * 
- * @param fn an asynchronoys function to execute
- * @param timeout a time constrain for a function execution
- */
-async function runAsyncFnWithTimeout<T>(fn: () => Promise<T>, timeout = utilityFunctionsTimeout): UncertianPromiseResultSuccess<T> {
-    const fnPromise = fn();
-
-    let resolveTimeoutPromise, timeoutHandle;
-    const timeoutPromise = new Promise<TimeoutError>((resolve, reject) => {
-        resolveTimeoutPromise = resolve;
-
-        timeoutHandle = setTimeout(() => {
-            resolve(new TimeoutError(`timeout (${timeout} ms) while evaluating an async function`));
-        }, timeout);
-    });
-
-    const actionResult = await Promise.race([fnPromise, timeoutPromise]);
-    if (actionResult instanceof TimeoutError)
-        return Promise.reject({ success: false, reason: actionResult });
-    else {
-        clearTimeout(timeoutHandle);
-        resolveTimeoutPromise();
-
-        return { success: true, result: actionResult as T };
-    }
-}
-
-function getCoverageGatherer() {
-    const cwd = process.cwd();
-    const coverageMap = libCoverage.createCoverageMap();
-
-    return {
-        async gatherCoverageForPage(page: Page) {
-            const coverage = await page.coverage.stopJSCoverage();
-            for (const entry of coverage) {
-                if (entry.url === '')
-                    continue;
-
-                const scriptPath = path.join(cwd, new URL(entry.url).pathname);
-                const converter = v8toIstanbul(scriptPath, 0, { source: entry.source! }, (filepath) => {
-                    const normalized = filepath.replace(/\\/g, '/');
-                    const ret = normalized.includes('node_modules/');
-                    return ret;
-                });
-
-                await converter.load();
-                converter.applyCoverage(entry.functions);
-
-                const data = converter.toIstanbul();
-                coverageMap.merge(data);
-            }
-        },
-        async saveCoverage() {
-            // await fs.remove('coverage');
-            const context = libReport.createContext({ coverageMap });
-            reports.create(process.env.CI ? 'lcov' : 'html').execute(context);
-        }
-    }
-}
-
-/**
- * 
- * thanks https://github.com/microsoft/playwright/discussions/14415#discussioncomment-2977900
- * @param page 
- */
-async function saveV8Coverage(page: Page): Promise<void> {
-    const cwd = process.cwd();
-
-    const coverage = await page.coverage.stopJSCoverage();
-    const map = libCoverage.createCoverageMap();
-    for (const entry of coverage) {
-        if (entry.url === '')
-            continue;
-
-        const scriptPath = path.join(cwd, new URL(entry.url).pathname);
-        const converter = v8toIstanbul(scriptPath, 0, { source: entry.source! }, (filepath) => {
-            const normalized = filepath.replace(/\\/g, '/');
-            const ret = normalized.includes('node_modules/');
-            return ret;
-        });
-
-        await converter.load();
-        converter.applyCoverage(entry.functions);
-
-        const data = converter.toIstanbul();
-        map.merge(data);
-    }
-    await fs.rm('coverage', { force: true, recursive: true });
-    const context = libReport.createContext({ coverageMap: map });
-    reports.create('html').execute(context);
-}
-
-test.beforeAll(() => {
-    // console.log('CI variable: ' + process.env.CI);
-});
-
-let { gatherCoverageForPage, saveCoverage } = getCoverageGatherer();
-test.beforeEach(async ({ page, browserName }, workerInfo) => {
+const { startGatheringCoverage, finishGatheringCoverage, generateAndSaveCoverageReport } = getCoverageGatherer();
+test.beforeEach(async ({ page, browserName }) => {
     await page.goto('http://127.0.0.1:3000');
 
-    // await page.evaluate(async (loggerAsStr) => {
-    //     // @ts-ignore
-    //     window.Logger = loggerAsStr;
-    // }, Logger.toString());
-
-    if (browserName === 'chromium' && workerInfo.config.workers === 1) // gather coverage only in chromium
-        await page.coverage.startJSCoverage();
+    if (process.env.COVERAGE && browserName === 'chromium')
+        await startGatheringCoverage(page);
 });
 
-test.afterEach(async ({ page, browserName }, workerInfo) => {
-    // coverage is collected only when 1 worker is used
-    if (browserName === 'chromium' && workerInfo.config.workers === 1) // gather coverage only in chromium
-        await gatherCoverageForPage(page);
+test.afterEach(async ({ page, browserName }) => {
+    // stop collection coverage
+    if (process.env.COVERAGE && browserName === 'chromium')
+        await finishGatheringCoverage(page);
 });
 
-test.afterAll(async ({ browserName }, workerInfo) => {
-    // coverage is collected only when 1 worker is used
-    if (browserName === 'chromium' && workerInfo.config.workers === 1)  // gather coverage only in chromium
-        await saveCoverage();
+test.afterAll(async ({ browserName }) => {
+    // save coverage data
+    if (process.env.COVERAGE && browserName === 'chromium')
+        await generateAndSaveCoverageReport();
 });
-
 
 test('logs a "hello world" message', async ({ page }) => {
     const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
         let logger = new window.Logger();
         logger.log('info', 'hello world');
-    }, regularTestPageFunctionRunningTimeout);
+    }, consoleListeningDurationMs);
     const consoleEvents = await consoleEventsPromise;
 
     expect(consoleEvents.length).toBe(1);
@@ -343,7 +63,7 @@ test('logs a "hello world" message when destructured', async ({ page }) => {
     const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
         let { log } = new window.Logger();
         log('info', 'hello world');
-    }, regularTestPageFunctionRunningTimeout);
+    }, consoleListeningDurationMs);
     const consoleEvents = await consoleEventsPromise;
 
     expect(consoleEvents.length).toBe(1);
@@ -355,7 +75,7 @@ test.describe('prefixes', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger('root');
             logger.log('info', 'hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -366,7 +86,7 @@ test.describe('prefixes', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger('root', 'foo');
             logger.log('info', 'hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -379,7 +99,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('warn', 'hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -390,7 +110,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logDebug('hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -401,7 +121,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logInfo('hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -412,7 +132,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logWarn('hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -423,7 +143,7 @@ test.describe('log levels', () => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.logError('hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -441,7 +161,7 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: 'foo and bar'
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -468,7 +188,7 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: { foo: "and bar" }
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -494,7 +214,7 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: undefined
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
 
@@ -512,7 +232,7 @@ test.describe('passing additional data', () => {
                 additional: undefined,
                 alwaysLogAdditional: true
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
         const mainMessageData = consoleEvents[0];
         const additionalMessageData = consoleEvents[1];
@@ -541,7 +261,7 @@ test.describe('passing additional data', () => {
                     additional: { foo: "and bar" },
                     stringifyAdditional: true
                 });
-            }, regularTestPageFunctionRunningTimeout);
+            }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
             const mainMessageData = consoleEvents[0];
             const additionalMessageData = consoleEvents[1];
@@ -571,7 +291,7 @@ test.describe('passing additional data', () => {
                         replacer: ['hello']
                     }
                 });
-            }, regularTestPageFunctionRunningTimeout);
+            }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
             const mainMessageData = consoleEvents[0];
             const additionalMessageData = consoleEvents[1];
@@ -601,7 +321,7 @@ test.describe('passing additional data', () => {
                         replacer: (key, value) => key === 'hello' ? 'bar' : value
                     }
                 });
-            }, regularTestPageFunctionRunningTimeout);
+            }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
             const mainMessageData = consoleEvents[0];
             const additionalMessageData = consoleEvents[1];
@@ -631,7 +351,7 @@ test.describe('passing additional data', () => {
                         space: 4
                     }
                 });
-            }, regularTestPageFunctionRunningTimeout);
+            }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
             const mainMessageData = consoleEvents[0];
             const additionalMessageData = consoleEvents[1];
@@ -666,7 +386,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: undefined
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
@@ -700,7 +420,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: true
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
@@ -730,7 +450,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: new Error('this is an error')
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
@@ -762,7 +482,7 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: 'this is an error'
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
         const consoleEvents = await consoleEventsPromise;
@@ -789,7 +509,7 @@ test.describe('cloning', () => {
             let logger = new window.Logger('root', 'foo')
                 .clone();
             logger.log('info', 'hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -801,7 +521,7 @@ test.describe('cloning', () => {
             let logger = new window.Logger('root')
                 .cloneAndAppendPrefix('foo');
             logger.log('info', 'hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -813,7 +533,7 @@ test.describe('cloning', () => {
             let logger = new window.Logger('root')
                 .cloneAndAppendPrefix('foo', 'bar');
             logger.log('info', 'hello world');
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
 
         expect(consoleEvents.length).toBe(1);
@@ -831,7 +551,7 @@ test.describe('alerts', () => {
             logger.log('info', 'hello world', {
                 alertMsg: true
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         page.on('dialog', async (dialog) => {
             const type = dialog.type();
             const msg = dialog.message();
@@ -859,7 +579,7 @@ test.describe('alerts', () => {
                 additional: 'some additional data',
                 alertMsg: true
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         page.on('dialog', async (dialog) => {
             const type = dialog.type();
             const msg = dialog.message();
@@ -902,7 +622,7 @@ test.describe('alerts', () => {
                 throwErr: 'this is an error 🤓🤓',
                 alertMsg: true
             });
-        }, regularTestPageFunctionRunningTimeout);
+        }, consoleListeningDurationMs);
         page.on('dialog', async (dialog) => {
             const type = dialog.type();
             const msg = dialog.message();
@@ -930,3 +650,159 @@ test.describe('alerts', () => {
         expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
     });
 });
+
+
+
+/**
+ * Console event data (`console.log()` and such). 
+ */
+type ConsoleEventData = {
+    msg: string,
+    args: JSHandle[],
+    type: string
+}
+
+/**
+ * Runs function `fn` within the `page` and then gathers all console messages for `duration` ms, returning them after.
+ * 
+ * @param page the page context.
+ * @param fn a sync/async function to expose and then run within the page.
+ * 
+ * **NOTE:** this function is run within the `page` so it can't access this script or any context outside of the it, except for the data you pass in `args`.
+ * @param duration for how long in ms to gather the console events.
+ * @returns a promise that results in object with:
+ * - `consoleEventsPromise` → a promise which resolves to an array of console event data records (messages basically) after the `duration` ms.
+ * - `pageFnRunnerPromise` → a promise which resolves when function `fn` is done running to whatever you desided to return in it.
+ */
+async function runFnAndGatherConsoleEventsForDuration<R extends any, A extends Record<string, any>>(
+    page: Page,
+    fn: (arg: A) => R | Promise<R>,
+    duration: number,
+    {
+        messagesToOnlyLookFor,
+        messagesToIgnore = [],
+        args,
+    }: Partial<{
+        /** whitelist for a specific console messages (if message is not this it will be ignored). 
+         * no messages are whitelisted by default. can be overriden by `messagesToIgnore`
+         */
+        messagesToOnlyLookFor: string[],
+        /** blacklist for a specific console messages (if message is any of this it will be ignored).
+         * if message is whitelisted in `messagesToOnlyLookFor`, but blacklisted here — it will be ignored.
+         */
+        messagesToIgnore: string[],
+        /** additional data to pass to {@link fn} as an argument — it should be serializable (so no functions, etc.) — use `page.exposeFunction` for this. */
+        args: A
+    }> = {}): Promise<{ consoleEventsPromise: Promise<ConsoleEventData[]>, pageFnRunnerPromise: Promise<R> }> {
+    const consoleEventsPromise = gatherConsoleEventsForDuration(page, duration, {
+        messagesToOnlyLookFor,
+        messagesToIgnore
+    });
+    // @ts-ignore i dont understand you typescript
+    const pageFnRunnerPromise = page.evaluate(fn, args);
+
+    return { consoleEventsPromise, pageFnRunnerPromise };
+}
+
+/**
+ * Gathers all console messages within the `page` for `duration` ms, returning them after.
+ * 
+ * @param page the page context.
+ * @param duration for how long in ms to gather the console events.
+ * @returns a promise which resolves to an array of console event data records (messages basically) after the `duration` ms.
+ */
+async function gatherConsoleEventsForDuration(page: Page, duration: number, {
+    messagesToOnlyLookFor = [],
+    messagesToIgnore = [],
+}: Partial<{
+    /** whitelist for a specific console messages (if message is not this it will be ignored). 
+     * no messages are whitelisted by default. can be overriden by `messagesToIgnore`
+     */
+    messagesToOnlyLookFor: string[],
+    /** blacklist for a specific console messages (if message is any of this it will be ignored).
+     * if message is whitelisted in `messagesToOnlyLookFor`, but blacklisted here — it will be ignored.
+     */
+    messagesToIgnore: string[]
+}> = {}): Promise<ConsoleEventData[]> {
+    const isWhitelistActive = messagesToOnlyLookFor.length > 0;
+    const consoleEventDataRecords: ConsoleEventData[] = [];
+
+    const consoleEventListener = async (e: ConsoleMessage): Promise<void> => {
+        const msg = e.text();
+        const type = e.type();
+        const args = e.args();
+
+        if (isWhitelistActive) {
+            const isWhitelisted = messagesToOnlyLookFor.includes(msg);
+            if (!isWhitelisted)
+                return;
+        }
+
+        const isBlacklisted = consoleMessagesToIgnore.includes(msg) || messagesToIgnore.includes(msg);
+        if (isBlacklisted)
+            return;
+
+        consoleEventDataRecords.push({ msg, type, args });
+    }
+    page.addListener('console', consoleEventListener);
+
+    await wait(duration)
+    // .catch(err => { throw new Error('got an error: ' + err)});
+    page.removeListener('console', consoleEventListener);
+
+    return consoleEventDataRecords;
+}
+
+/**
+ * Creates handles for collection of test coverage.
+ */
+function getCoverageGatherer() {
+    const cwd = process.cwd();
+    const coverageMap = libCoverage.createCoverageMap();
+
+    return {
+        /** Starts gathering coverage. */
+        async startGatheringCoverage(page: Page) {
+            await page.coverage.startJSCoverage();
+        },
+        /** Stops gathering coverage. */
+        async finishGatheringCoverage(page: Page) {
+            const coverage = await page.coverage.stopJSCoverage();
+            for (const entry of coverage) {
+                if (entry.url === '')
+                    continue;
+
+                const scriptPath = path.join(cwd, new URL(entry.url).pathname);
+                const converter = v8toIstanbul(scriptPath, 0, { source: entry.source! }, (filepath) => {
+                    const normalized = filepath.replace(/\\/g, '/');
+                    const ret = normalized.includes('node_modules/');
+                    return ret;
+                });
+
+                await converter.load();
+                converter.applyCoverage(entry.functions);
+
+                const data = converter.toIstanbul();
+                coverageMap.merge(data);
+            }
+        },
+        /** Generates coverage report from gathered data and writes it to disk. */
+        async generateAndSaveCoverageReport() {
+            // await fs.remove('coverage');
+
+            const uniqueDirSuffix = randomString({ length: 8, type: 'distinguishable' });
+
+            const context = libReport.createContext({ coverageMap, dir: path.join('./coverage/e2e', `report-chunk-${uniqueDirSuffix}`) });
+            reports.create(process.env.CI ? 'lcov' : 'lcov').execute(context);
+        }
+    }
+}
+
+/**
+ * Returns a promise which will be resolved after `ms`.
+ * 
+ * @param ms waiting duration.
+ */
+async function wait(ms: number) {
+    await new Promise(resolve => setTimeout(resolve, ms));
+}

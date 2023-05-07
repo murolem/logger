@@ -1,15 +1,12 @@
 import { defineConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths'
 import path from 'path';
-import cleanupPlugin from 'rollup-plugin-cleanup';
 
 const cwd = process.cwd();
 
 export default defineConfig({
     plugins: [
-        cleanupPlugin({
-            comments: 'none',
-            extensions: ['js', 'ts']
-        })
+        tsconfigPaths()
     ],
     root: path.join(cwd, '.'),
     server: {
