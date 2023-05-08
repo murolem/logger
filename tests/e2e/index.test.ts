@@ -70,6 +70,41 @@ test('logs a "hello world" message when destructured', async ({ page }) => {
     expect(consoleEvents[0].msg).toBe('[info] hello world');
 });
 
+test.describe('different types of main message', () => {
+    test('logs a "[1,\'hello\',[object Object]]" message when logging an array "[1,\'hello\', { beep: \'boop\' }]" as main message (just as-is)', async ({ page }) => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+            logger.log('info', [1,'hello', { beep: 'boop' }]);
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+    
+        expect(consoleEvents.length).toBe(1);
+        expect(consoleEvents[0].msg).toBe('[info] 1,hello,[object Object]');
+    });
+
+    test('logs a "() => \'hello world\'" message when logging a "() => \'hello world\'" function as main message (just as-is)', async ({ page }) => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+            logger.log('info', () => 'hello world' );
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+    
+        expect(consoleEvents.length).toBe(1);
+        expect(consoleEvents[0].msg).toBe('[info] () => \'hello world\'');
+    });
+
+    test('logs a "[object Object]" message when logging a "{ beep: \'boop\' }" object as main message (just as-is)', async ({ page }) => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+            logger.log('info', { beep: 'boop' });
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+    
+        expect(consoleEvents.length).toBe(1);
+        expect(consoleEvents[0].msg).toBe('[info] [object Object]');
+    });
+});
+
 test.describe('prefixes', () => {
     test('logs a "hello world" message with a "root" prefix', async ({ page }) => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
