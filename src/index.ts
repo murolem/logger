@@ -180,7 +180,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logDebug = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logDebug = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
 		this.log('debug', msg, params);
 	}
 
@@ -190,7 +190,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logInfo = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logInfo = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
 		this.log('info', msg, params);
 	}
 
@@ -200,7 +200,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logWarn = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logWarn = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
 		this.log('warn', msg, params);
 	}
 
@@ -210,7 +210,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logError = (msg: string, params: Partial<MessageLogParams> = {}): void => {
+	logError = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
 		this.log('error', msg, params);
 	}
 
@@ -220,7 +220,7 @@ export default class Logger {
 	 * @param level log level.
 	 * @param msg a message to log.
 	 */
-	log = (level: LogLevel, msg: string, {
+	log = (level: LogLevel, msg: unknown, {
 		additional = undefined,
 		alwaysLogAdditional,
 		stringifyAdditional,
