@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.5](https://github.com/murolem/logger/compare/v0.2.4...v0.2.5) (2023-05-08)
+
+
+### Features
+
+* allowed for logging anything as a message (1st arg) ([bc29a76](https://github.com/murolem/logger/commit/bc29a7611d811040875a5eb78bca7db845a6fc45)), closes [#5](https://github.com/murolem/logger/issues/5)
+
 ### [0.2.4](https://github.com/murolem/logger/compare/v0.2.3...v0.2.4) (2023-05-07)
 
 ### [0.2.3](https://github.com/murolem/logger/compare/v0.2.2...v0.2.3) (2023-05-07)
