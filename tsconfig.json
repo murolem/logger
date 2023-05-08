@@ -12,12 +12,18 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
+      "$utils": [
+        "./src/utils"
+      ],
+      "$utils/*": [
+        "./src/utils/*"
+      ],
       "$src": [
         "./src"
       ],
       "$src/*": [
         "./src/*"
-      ]
+      ],
     },
     /* Bundler mode */
     "moduleResolution": "node",

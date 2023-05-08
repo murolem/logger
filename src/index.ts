@@ -1,3 +1,7 @@
+import { paramNames } from '$src/contants';
+import { objectGetOwnOrFallback } from '$utils/objectGetOwnOrFallback';
+import { objectHasOwnOnly } from '$utils/objectHasOwnOnly';
+
 /**
  * Additional-optional parameters used when logging.
  */
@@ -20,7 +24,7 @@ export type MessageLogParams = {
 	 * 
 	 * @default undefined
 	 */
-	additional: any,
+	additional: unknown,
 
 	/**
 	 * Log additional data (see {@link MessageLogParams.additional additional}) in case it is `undefined`?
@@ -180,7 +184,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logDebug = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
+	logDebug = (msg: unknown, params?: Partial<MessageLogParams>): void => {
 		this.log('debug', msg, params);
 	}
 
@@ -190,7 +194,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logInfo = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
+	logInfo = (msg: unknown, params?: Partial<MessageLogParams>): void => {
 		this.log('info', msg, params);
 	}
 
@@ -200,7 +204,7 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logWarn = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
+	logWarn = (msg: unknown, params?: Partial<MessageLogParams>): void => {
 		this.log('warn', msg, params);
 	}
 
@@ -210,75 +214,138 @@ export default class Logger {
 	 * @param msg a message to log.
 	 * @param params optional params.
 	 */
-	logError = (msg: unknown, params: Partial<MessageLogParams> = {}): void => {
+	logError = (msg: unknown, params?: Partial<MessageLogParams>): void => {
 		this.log('error', msg, params);
 	}
 
-	/**
-	 * Logs {@link msg} using {@link level} log level.
-	 * 
-	 * @param level log level.
-	 * @param msg a message to log.
-	 */
-	log = (level: LogLevel, msg: unknown, {
-		additional = undefined,
-		alwaysLogAdditional,
-		stringifyAdditional,
-		alertMsg,
-		throwErr = false
-	}: Partial<MessageLogParams> = {}): void => {
-		const prefix = `[${level}${this.#prefixBody ? ` | ${this.#prefixBody}` : ''}] `;
-		const msgWithPrefix = prefix + msg;
-		const logMsg = throwErr !== true;
 
-		if (logMsg)
-			console.log(msgWithPrefix);
+	log: {
+		/**
+		 * Logs {@link msg} using {@link level} log level.
+		 * 
+		 * @param level log level.
+		 * @param msg a message to log.
+		 */
+		(
+			level: LogLevel,
+			msg: unknown,
+			params?: Partial<MessageLogParams>
+		): void,
+		/**
+		 * Logs {@link msg} and additional data {@link additional} using {@link level} log level.
+		 * 
+		 * @param level log level.
+		 * @param msg a message to log.
+		 */
+		(
+			level: LogLevel,
+			msg: unknown,
+			additional: MessageLogParams['additional'],
+			params?: Partial<Omit<MessageLogParams, 'additional'>>
+		): void,
+	} = (
+		level: LogLevel,
+		msg: unknown,
+		arg3?: Partial<MessageLogParams> | MessageLogParams['additional'],
+		arg4?: Partial<Omit<MessageLogParams, 'additional'>>
+	): void => {
+			let { 
+				additional,
+				alwaysLogAdditional,
+				stringifyAdditional,
+				alertMsg,
+				throwErr
+			}: Partial<MessageLogParams> = {
+				additional: undefined,
+				alwaysLogAdditional: undefined,
+				stringifyAdditional: undefined,
+				alertMsg: undefined,
+				throwErr: false,
+			}
 
-		const logAdditional = alwaysLogAdditional || additional !== undefined;
-		if (logAdditional) {
-			if (stringifyAdditional) {
-				if (stringifyAdditional === true) // just boolean value
-					console.log(prefix + 'additional data:\n', JSON.stringify(additional));
-				else // an object
-					console.log(prefix + 'additional data:\n', JSON.stringify(
-						additional, 
-						// @ts-ignore fuck off
-						stringifyAdditional.replacer, 
-						stringifyAdditional.space)
-					);
-			} else
-				console.log(prefix + 'additional data:\n', additional);
+			
+			if(arg3) {
+				// 3rd arg is ambiguous, lets check if it is a params object or "additional" data
+				// if its empty, assume it is additinal data, NOT params
+				const isArg3IsParamsObj = objectHasOwnOnly(arg3, paramNames) && Object.keys(arg3).length > 0;
+				if(isArg3IsParamsObj) {
+					// 1st overload, arg3 is params object
+					const params = arg3 as Partial<MessageLogParams>;
+
+					additional = objectGetOwnOrFallback(params, 'additional', additional);
+					alwaysLogAdditional = objectGetOwnOrFallback(params, 'alwaysLogAdditional', alwaysLogAdditional);
+					stringifyAdditional = objectGetOwnOrFallback(params, 'stringifyAdditional', stringifyAdditional);
+					alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
+					throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
+				} else {
+					// 2nd overload, arg3 is "additional" data, params object may be arg4
+					additional = arg3;
+
+					if(arg4) {
+						// arg4 is params object
+						const params = arg4 as Partial<MessageLogParams>;
+
+						// no "additional" because it was assigned from arg3 
+						alwaysLogAdditional = objectGetOwnOrFallback(params, 'alwaysLogAdditional', alwaysLogAdditional);
+						stringifyAdditional = objectGetOwnOrFallback(params, 'stringifyAdditional', stringifyAdditional);
+						alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
+						throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
+					}
+				}
+			}
+
+			const prefix = `[${level}${this.#prefixBody ? ` | ${this.#prefixBody}` : ''}] `;
+			const msgWithPrefix = prefix + msg;
+			const logMsg = throwErr !== true;
+
+			if (logMsg)
+				console.log(msgWithPrefix);
+
+			const logAdditional = alwaysLogAdditional || additional !== undefined;
+			if (logAdditional) {
+				if (stringifyAdditional) {
+					if (stringifyAdditional === true) // just boolean value
+						console.log(prefix + 'additional data:\n', JSON.stringify(additional));
+					else // an object
+						console.log(prefix + 'additional data:\n', JSON.stringify(
+							additional,
+							// @ts-ignore fuck off
+							stringifyAdditional.replacer,
+							stringifyAdditional.space)
+						);
+				} else
+					console.log(prefix + 'additional data:\n', additional);
+			}
+
+			if (alertMsg) {
+				const parts = [
+					msgWithPrefix// + '\n\n'
+				];
+
+				if (logAdditional)
+					parts.push('(see additional data in the console)');
+				if (throwErr)
+					parts.push('(see an error messaage in the console)');
+
+				let result;
+				if (parts.length === 1)
+					result = parts[0];
+				else
+					result = parts[0]
+						+ '\n\n'
+						+ parts.slice(1).join('\n')
+
+				alert(result);
+			}
+
+			if (throwErr) {
+				if (typeof throwErr === 'string') // throwing custom message
+					throw new Error(prefix + throwErr);
+				else if (throwErr instanceof Error) { // throwing the provided error
+					throwErr.message = prefix + throwErr.message;
+					throw throwErr;
+				} else // boolean true -- loggin the message in error itself
+					throw new Error(msgWithPrefix);
+			}
 		}
-
-		if (alertMsg) {
-			const parts = [
-				msgWithPrefix// + '\n\n'
-			];
-
-			if (logAdditional)
-				parts.push('(see additional data in the console)');
-			if (throwErr)
-				parts.push('(see an error messaage in the console)');
-
-			let result;
-			if (parts.length === 1)
-				result = parts[0];
-			else
-				result = parts[0]
-					+ '\n\n'
-					+ parts.slice(1).join('\n')
-
-			alert(result);
-		}
-
-		if (throwErr) {
-			if (typeof throwErr === 'string') // throwing custom message
-				throw new Error(prefix + throwErr);
-			else if (throwErr instanceof Error) { // throwing the provided error
-				throwErr.message = prefix + throwErr.message;
-				throw throwErr;
-			} else // boolean true -- loggin the message in error itself
-				throw new Error(msgWithPrefix);
-		}
-	}
 }

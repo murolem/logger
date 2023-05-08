@@ -187,6 +187,39 @@ test.describe('log levels', () => {
 })
 
 test.describe('passing additional data', () => {
+    test('logging "main" message and "additinal" as empty object "{}", expecting "additional" to be object "{}"', async ({ page }) => {
+        const expectedMainMsg = '[info] hello world';
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', {}];
+
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+            logger.log('info', 'hello world', {
+                additional: {}
+            });
+            logger.log('info', 'hello world', { }); // alias
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
+        
+        for(let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
+
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+    
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+    
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+    
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
+    });
+
     test('logging "main" message and "additinal" as string, when "additional" is string "foo and bar"', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] additional data:\n', 'foo and bar'];
@@ -196,22 +229,28 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: 'foo and bar'
             });
+            logger.log('info', 'hello world', 'foo and bar');
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+        for(let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
-
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+    
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+    
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+    
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 
     test('logging "main" message and "additinal" as object, when "additional" is object "{ foo: "and bar" }"', async ({ page }) => {
@@ -223,22 +262,28 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: { foo: "and bar" }
             });
+            logger.log('info', 'hello world', { foo: "and bar" });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+        for(let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
-
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+    
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+    
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+    
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 
     test('logging only "main" message when "additional" is "undefined"', async ({ page }) => {
@@ -249,12 +294,16 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: undefined
             });
+            logger.log('info', 'hello world', undefined);
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-        const mainMessageData = consoleEvents[0];
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
 
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(1);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+        for(let i = 0; i < 2; i++) {
+            const mainMessageData = consoleEvents[i];
+
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+        }
     });
 
     test('logging "main" message and "additinal" when: (1) "additional" is "undefined" & (2) "alwaysLogAdditional" is "true"', async ({ page }) => {
@@ -267,22 +316,28 @@ test.describe('passing additional data', () => {
                 additional: undefined,
                 alwaysLogAdditional: true
             });
+            logger.log('info', 'hello world', undefined, { alwaysLogAdditional: true });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+        for(let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
-
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+    
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+    
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+    
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 
     test.describe('stringify additional with stringifyAdditional = true setting', () => {
