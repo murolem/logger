@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build && tsc --emitDeclarationOnly",
+    "build": "vite build",
     "test": "npm run test:e2e",
     "test:coverage": "npm run test:e2e:coverage",
     "test:e2e": "playwright test",
@@ -16,7 +16,7 @@
     "test:e2e:coverage": "cross-env COVERAGE=true playwright test",
     "test:e2e:coverage:chromium": "npm run test:e2e:coverage -- --project=chromium",
     "test:e2e:server": "vite dev",
-    "sendit": "npm run add && npm run commit && npm run push",
+    "sendit": "npm run build && npm run add && npm run commit && npm run push",
     "add": "git add .",
     "commit": "cz",
     "push": "git push --follow-tags origin"
@@ -36,6 +36,7 @@
     "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^16.0.3",
     "fs-extra": "^11.1.1",
+    "get-tsconfig": "^4.5.0",
     "istanbul-lib-coverage": "^3.2.0",
     "istanbul-lib-report": "^3.0.0",
     "istanbul-reports": "^3.1.5",
@@ -43,7 +44,7 @@
     "typescript": "^5.0.4",
     "v8-to-istanbul": "^9.1.0",
     "vite": "^4.2.2",
-    "vite-tsconfig-paths": "^4.2.0"
+    "vite-plugin-dts": "^2.3.0"
   },
   "keywords": [],
   "author": "",

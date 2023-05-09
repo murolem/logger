@@ -11,6 +11,10 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
+    "noEmit": true,
+    // "declaration": true,
+    // "declarationDir": "dist",
+    // "emitDeclarationOnly": true,
     "paths": {
       "$constants": [
         "./src/constants.ts"
@@ -32,11 +36,9 @@
       ],
     },
     /* Bundler mode */
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     /* Linting */
     "strict": true,
     // "noUnusedLocals": true,
