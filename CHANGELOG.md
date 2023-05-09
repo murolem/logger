@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.2](https://github.com/murolem/logger/compare/v1.0.1...v1.0.2) (2023-05-09)
+
+
+### Bug Fixes
+
+* fixed "alert" option throwing "not defined" error in node env ([a573347](https://github.com/murolem/logger/commit/a5733474898c4f1d10e0ddbf201e20c101b62385)), closes [#18](https://github.com/murolem/logger/issues/18)
+
 ## [1.0.1](https://github.com/murolem/logger/compare/v1.0.0...v1.0.1) (2023-05-09)
 
 
