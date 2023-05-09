@@ -147,7 +147,7 @@ test.describe('log levels', () => {
 test.describe('aliases', () => {
     test('logDebug() prints "hello world" using "debug" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
         const expectedMainMsg = '[debug] hello world';
-        const expectedAdditionalMessageParts = ['[debug] additional data:\n', JSON.stringify({ foo: 123 })];
+        const expectedAdditionalMessageParts = ['[debug] additional data:\n', JSON.stringify({ foo: 123 }, null, 2)];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logDebug } = new window.Logger();
@@ -181,7 +181,7 @@ test.describe('aliases', () => {
 
     test('logInfo() prints "hello world" using "info" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: 123 })];
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: 123 }, null, 2)];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logInfo } = new window.Logger();
@@ -215,7 +215,7 @@ test.describe('aliases', () => {
 
     test('logWarn() prints "hello world" using "warn" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
         const expectedMainMsg = '[warn] hello world';
-        const expectedAdditionalMessageParts = ['[warn] additional data:\n', JSON.stringify({ foo: 123 })];
+        const expectedAdditionalMessageParts = ['[warn] additional data:\n', JSON.stringify({ foo: 123 }, null, 2)];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logWarn } = new window.Logger();
@@ -249,7 +249,7 @@ test.describe('aliases', () => {
 
     test('logError() prints "hello world" using "error" log level', async ({ page }) => {
         const expectedMainMsg = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] additional data:\n', JSON.stringify({ foo: 123 })];
+        const expectedAdditionalMessageParts = ['[error] additional data:\n', JSON.stringify({ foo: 123 }, null, 2)];
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logError } = new window.Logger();
@@ -440,7 +440,7 @@ test.describe('passing additional data', () => {
     test.describe('stringify additional with "stringifyAdditional" = "true" option', () => {
         test('"additional" is object "{ hello: "world", foo: "bar" }"', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: "and bar" })];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: "and bar" }, null, 2)];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
@@ -474,7 +474,7 @@ test.describe('passing additional data', () => {
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", replacer is an array ["hello"]', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "world" })];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "world" }, null, 2)];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
@@ -514,7 +514,7 @@ test.describe('passing additional data', () => {
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", replacer is a function that replaces "hello" property value with "bar"', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
-            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "bar", foo: 'bar' })];
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ hello: "bar", foo: 'bar' }, null, 2)];
 
             const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
                 let logger = new window.Logger();
