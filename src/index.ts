@@ -1,6 +1,8 @@
 import { paramNames } from '$src/contants';
+import { isObject } from '$utils/isObject';
+import { noop } from '$utils/noop';
 import { objectGetOwnOrFallback } from '$utils/objectGetOwnOrFallback';
-import { objectHasOwnOnly } from '$utils/objectHasOwnOnly';
+import { doesObjectOnlyHaveSpecificProps } from '$utils/objectHasOwnOnly';
 
 /**
  * Additional-optional parameters used when logging.
@@ -144,6 +146,9 @@ export default class Logger {
 	 */
 	constructor(...prefix: string[]) {
 		this.appendPrefix(...prefix);
+
+		if (!globalThis['DEBUG_log'])
+			globalThis['DEBUG_log'] = noop;
 	}
 
 	/**
@@ -216,15 +221,25 @@ export default class Logger {
 	 */
 	logError = (msg: unknown, params?: Partial<MessageLogParams>): void => {
 		this.log('error', msg, params);
+
+		this.log('fsdf', 'fsdf', 'fsdfsd', 'fdsf')
 	}
 
-
+	/**
+	 * Log something.
+	 * 
+	 * Call this function to see overloads and their details.
+	 */
 	log: {
 		/**
 		 * Logs {@link msg} using {@link level} log level.
 		 * 
+		 * **NOTE:** this overload might be unintentional — check if you passing `params` as 3rd argument {@link params} and **not** `additional` data. 
+		 * More details in other overload.
+		 * 
 		 * @param level log level.
 		 * @param msg a message to log.
+		 * @param params optional parameters.
 		 */
 		(
 			level: LogLevel,
@@ -233,9 +248,18 @@ export default class Logger {
 		): void,
 		/**
 		 * Logs {@link msg} and additional data {@link additional} using {@link level} log level.
+		 * Can optionally have {@link params} without `additional` in it.
+		 * 
+		 * **NOTE:** {@link additional} can be interpreted as `params` in case it is matches all these conditions: 
+		 * 1. It is an object and is not empty.
+		 * 2. It **only** containts properties with {@link MessageLogParams names that `params` can have}. 
+		 * 3. {@link params} is not provided. 
+		 * If you want to be safe and log {@link additional} no matter what — provide it as `additional` property in `params` using other overload.
 		 * 
 		 * @param level log level.
 		 * @param msg a message to log.
+		 * @param additional additional data to log.
+		 * @param params optional parameters.
 		 */
 		(
 			level: LogLevel,
@@ -249,7 +273,8 @@ export default class Logger {
 		arg3?: Partial<MessageLogParams> | MessageLogParams['additional'],
 		arg4?: Partial<Omit<MessageLogParams, 'additional'>>
 	): void => {
-			let { 
+			// setup
+			let {
 				additional,
 				alwaysLogAdditional,
 				stringifyAdditional,
@@ -263,12 +288,30 @@ export default class Logger {
 				throwErr: false,
 			}
 
-			
-			if(arg3) {
-				// 3rd arg is ambiguous, lets check if it is a params object or "additional" data
-				// if its empty, assume it is additinal data, NOT params
-				const isArg3IsParamsObj = objectHasOwnOnly(arg3, paramNames) && Object.keys(arg3).length > 0;
-				if(isArg3IsParamsObj) {
+			let isArg3IsParamsObj = false;
+
+			// check arg3
+			if (arg3 === undefined) {
+				if (alwaysLogAdditional) {
+					DEBUG_log('arg3 is figured to be "additional": arg3 is "undefined" and "alwaysLogAdditional" is "true"');
+
+					additional = arg3;
+				} else {
+					DEBUG_log('arg3 is "undefined", "alwaysLogAdditional" is "false" — so arg3 is neither "additional" nor "params"');
+				}
+			} else { // arg3 !== undefined
+				DEBUG_log('arg3 is not "undefined", currently ambiguous of it being "additional" or "params"');
+
+				// 3rd arg is ambiguous (can be additional or params)
+				isArg3IsParamsObj =
+					(
+						arg4 === undefined
+						&& isObject(arg3)
+						&& doesObjectOnlyHaveSpecificProps(arg3 as object, paramNames)
+					);
+				if (isArg3IsParamsObj) {
+					DEBUG_log('arg3 is figured to be "params" — "additional", if there, will be extracted');
+
 					// 1st overload, arg3 is params object
 					const params = arg3 as Partial<MessageLogParams>;
 
@@ -278,22 +321,39 @@ export default class Logger {
 					alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
 					throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
 				} else {
-					// 2nd overload, arg3 is "additional" data, params object may be arg4
+					DEBUG_log('arg3 is figured to be "additional"');
+
+					// 2nd overload, arg3 is "additional" data; arg4 may be params object  
 					additional = arg3;
-
-					if(arg4) {
-						// arg4 is params object
-						const params = arg4 as Partial<MessageLogParams>;
-
-						// no "additional" because it was assigned from arg3 
-						alwaysLogAdditional = objectGetOwnOrFallback(params, 'alwaysLogAdditional', alwaysLogAdditional);
-						stringifyAdditional = objectGetOwnOrFallback(params, 'stringifyAdditional', stringifyAdditional);
-						alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
-						throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
-					}
 				}
 			}
 
+			// check arg4
+			if (isArg3IsParamsObj) {
+				if (arg4) {
+					DEBUG_log('arg4 is defined, but "params" were already extracted from arg3 — so, "arg4" will be ignored');
+				} else {
+					DEBUG_log('arg4 is "undefined", arg3 is "params"');
+				}
+			} else { // isArg3IsParamsObj === false
+				if (arg4) {
+					DEBUG_log('arg4 is figured to be "params" without "additional"');
+
+					// arg4 is params object without "additional"
+					const params = arg4 as Partial<Omit<MessageLogParams, 'additional'>>
+
+					alwaysLogAdditional = objectGetOwnOrFallback(params, 'alwaysLogAdditional', alwaysLogAdditional);
+					stringifyAdditional = objectGetOwnOrFallback(params, 'stringifyAdditional', stringifyAdditional);
+					alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
+					throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
+				} else {
+					DEBUG_log('no "params" were found: arg4 is "undefined" and arg3 has not matched "params" criteria');
+				}
+			}
+
+			DEBUG_log('-----');
+
+			// main body
 			const prefix = `[${level}${this.#prefixBody ? ` | ${this.#prefixBody}` : ''}] `;
 			const msgWithPrefix = prefix + msg;
 			const logMsg = throwErr !== true;
@@ -319,7 +379,7 @@ export default class Logger {
 
 			if (alertMsg) {
 				const parts = [
-					msgWithPrefix// + '\n\n'
+					msgWithPrefix
 				];
 
 				if (logAdditional)

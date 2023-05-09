@@ -34,6 +34,8 @@ test.beforeEach(async ({ page, browserName }) => {
 
     if (process.env.COVERAGE && browserName === 'chromium')
         await startGatheringCoverage(page);
+
+    await exposeDebugFunctionToPage(page, false);
 });
 
 test.afterEach(async ({ page, browserName }) => {
@@ -43,7 +45,7 @@ test.afterEach(async ({ page, browserName }) => {
 });
 
 test.afterAll(async ({ browserName }) => {
-    // save coverage data
+    // save coverage data 
     if (process.env.COVERAGE && browserName === 'chromium')
         await generateAndSaveCoverageReport();
 });
@@ -74,10 +76,10 @@ test.describe('different types of main message', () => {
     test('logs a "[1,\'hello\',[object Object]]" message when logging an array "[1,\'hello\', { beep: \'boop\' }]" as main message (just as-is)', async ({ page }) => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
-            logger.log('info', [1,'hello', { beep: 'boop' }]);
+            logger.log('info', [1, 'hello', { beep: 'boop' }]);
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-    
+
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[info] 1,hello,[object Object]');
     });
@@ -85,10 +87,10 @@ test.describe('different types of main message', () => {
     test('logs a "() => \'hello world\'" message when logging a "() => \'hello world\'" function as main message (just as-is)', async ({ page }) => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
-            logger.log('info', () => 'hello world' );
+            logger.log('info', () => 'hello world');
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-    
+
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[info] () => \'hello world\'');
     });
@@ -99,7 +101,7 @@ test.describe('different types of main message', () => {
             logger.log('info', { beep: 'boop' });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-    
+
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[info] [object Object]');
     });
@@ -196,25 +198,25 @@ test.describe('passing additional data', () => {
             logger.log('info', 'hello world', {
                 additional: {}
             });
-            logger.log('info', 'hello world', { }); // alias
+            logger.log('info', 'hello world', {}); // alias
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
-        
-        for(let i = 0; i < 2; i++) {
+
+        for (let i = 0; i < 2; i++) {
             const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
             const mainMessageData = consoleEventsSlice[0];
             const additionalMessageData = consoleEventsSlice[1];
-    
+
             expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
             expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
-    
+
             const additionalMessageArgs = await Promise.all([
                 additionalMessageData.args[0].jsonValue(),
                 additionalMessageData.args[1].jsonValue()
             ]);
-    
+
             expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
             expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
         }
@@ -230,24 +232,25 @@ test.describe('passing additional data', () => {
                 additional: 'foo and bar'
             });
             logger.log('info', 'hello world', 'foo and bar');
+            logger.log('info', 'hello world', 'foo and bar', {});
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(6);
 
-        for(let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {
             const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
             const mainMessageData = consoleEventsSlice[0];
             const additionalMessageData = consoleEventsSlice[1];
-    
+
             expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
             expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
-    
+
             const additionalMessageArgs = await Promise.all([
                 additionalMessageData.args[0].jsonValue(),
                 additionalMessageData.args[1].jsonValue()
             ]);
-    
+
             expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
             expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
         }
@@ -267,20 +270,20 @@ test.describe('passing additional data', () => {
         const consoleEvents = await consoleEventsPromise;
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        for(let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {
             const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
             const mainMessageData = consoleEventsSlice[0];
             const additionalMessageData = consoleEventsSlice[1];
-    
+
             expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
             expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
-    
+
             const additionalMessageArgs = await Promise.all([
                 additionalMessageData.args[0].jsonValue(),
                 additionalMessageData.args[1].jsonValue()
             ]);
-    
+
             expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
             expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
         }
@@ -299,7 +302,7 @@ test.describe('passing additional data', () => {
         const consoleEvents = await consoleEventsPromise;
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
 
-        for(let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {
             const mainMessageData = consoleEvents[i];
 
             expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
@@ -321,26 +324,26 @@ test.describe('passing additional data', () => {
         const consoleEvents = await consoleEventsPromise;
         expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        for(let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {
             const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
             const mainMessageData = consoleEventsSlice[0];
             const additionalMessageData = consoleEventsSlice[1];
-    
+
             expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
             expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
-    
+
             const additionalMessageArgs = await Promise.all([
                 additionalMessageData.args[0].jsonValue(),
                 additionalMessageData.args[1].jsonValue()
             ]);
-    
+
             expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
             expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
         }
     });
 
-    test.describe('stringify additional with stringifyAdditional = true setting', () => {
+    test.describe('stringify additional with "stringifyAdditional" = "true" option', () => {
         test('"additional" is object "{ hello: "world", foo: "bar" }"', async ({ page }) => {
             const expectedMainMsg = '[info] hello world';
             const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: "and bar" })];
@@ -351,22 +354,28 @@ test.describe('passing additional data', () => {
                     additional: { foo: "and bar" },
                     stringifyAdditional: true
                 });
+                logger.log('info', 'hello world', { foo: "and bar" }, { stringifyAdditional: true });
             }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
-            const mainMessageData = consoleEvents[0];
-            const additionalMessageData = consoleEvents[1];
+            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+            for (let i = 0; i < 2; i++) {
+                const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-            const additionalMessageArgs = await Promise.all([
-                additionalMessageData.args[0].jsonValue(),
-                additionalMessageData.args[1].jsonValue()
-            ]);
+                const mainMessageData = consoleEventsSlice[0];
+                const additionalMessageData = consoleEventsSlice[1];
 
-            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+                expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+                expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+                const additionalMessageArgs = await Promise.all([
+                    additionalMessageData.args[0].jsonValue(),
+                    additionalMessageData.args[1].jsonValue()
+                ]);
+
+                expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+                expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            }
         });
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", replacer is an array ["hello"]', async ({ page }) => {
@@ -381,22 +390,32 @@ test.describe('passing additional data', () => {
                         replacer: ['hello']
                     }
                 });
+                logger.log('info', 'hello world', { hello: "world", foo: "bar" }, {
+                    stringifyAdditional: {
+                        replacer: ['hello']
+                    }
+                });
             }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
-            const mainMessageData = consoleEvents[0];
-            const additionalMessageData = consoleEvents[1];
+            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+            for (let i = 0; i < 2; i++) {
+                const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-            const additionalMessageArgs = await Promise.all([
-                additionalMessageData.args[0].jsonValue(),
-                additionalMessageData.args[1].jsonValue()
-            ]);
+                const mainMessageData = consoleEventsSlice[0];
+                const additionalMessageData = consoleEventsSlice[1];
 
-            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+                expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+                expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+                const additionalMessageArgs = await Promise.all([
+                    additionalMessageData.args[0].jsonValue(),
+                    additionalMessageData.args[1].jsonValue()
+                ]);
+
+                expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+                expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            }
         });
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", replacer is a function that replaces "hello" property value with "bar"', async ({ page }) => {
@@ -411,22 +430,32 @@ test.describe('passing additional data', () => {
                         replacer: (key, value) => key === 'hello' ? 'bar' : value
                     }
                 });
+                logger.log('info', 'hello world', { hello: "world", foo: "bar" }, {
+                    stringifyAdditional: {
+                        replacer: (key, value) => key === 'hello' ? 'bar' : value
+                    }
+                });
             }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
-            const mainMessageData = consoleEvents[0];
-            const additionalMessageData = consoleEvents[1];
+            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+            for (let i = 0; i < 2; i++) {
+                const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-            const additionalMessageArgs = await Promise.all([
-                additionalMessageData.args[0].jsonValue(),
-                additionalMessageData.args[1].jsonValue()
-            ]);
+                const mainMessageData = consoleEventsSlice[0];
+                const additionalMessageData = consoleEventsSlice[1];
 
-            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+                expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+                expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+                const additionalMessageArgs = await Promise.all([
+                    additionalMessageData.args[0].jsonValue(),
+                    additionalMessageData.args[1].jsonValue()
+                ]);
+
+                expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+                expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            }
         });
 
         test('"additional" is object "{ hello: "world", foo: "bar" }", "space" is set to 4', async ({ page }) => {
@@ -441,28 +470,101 @@ test.describe('passing additional data', () => {
                         space: 4
                     }
                 });
+                logger.log('info', 'hello world', { hello: "world", foo: "bar" }, {
+                    stringifyAdditional: {
+                        space: 4
+                    }
+                });
             }, consoleListeningDurationMs);
             const consoleEvents = await consoleEventsPromise;
-            const mainMessageData = consoleEvents[0];
-            const additionalMessageData = consoleEvents[1];
+            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
-            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+            for (let i = 0; i < 2; i++) {
+                const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-            const additionalMessageArgs = await Promise.all([
-                additionalMessageData.args[0].jsonValue(),
-                additionalMessageData.args[1].jsonValue()
-            ]);
+                const mainMessageData = consoleEventsSlice[0];
+                const additionalMessageData = consoleEventsSlice[1];
 
-            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+                expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+                expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+                const additionalMessageArgs = await Promise.all([
+                    additionalMessageData.args[0].jsonValue(),
+                    additionalMessageData.args[1].jsonValue()
+                ]);
+
+                expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+                expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            }
         });
     });
 });
 
+test.describe('extra tests for: additional data as regular [3rd] arg getting along with props [3rd or 4th] arg', () => {
+    test('logging "main" message and "props" "{ additional: 123 }" @ 3rd arg, expecting it to be "props" and "additional" to be number "123"', async ({ page }) => {
+        /**
+         * A litte description of what is happening here:
+         * Only a 3rd argument is provided, and it is an object and has property named "additional", 
+         * which matches the criteria for this object to be either "params" or "additional"
+         * - if it is "params" → only number "123" will be printed
+         * - if it is "additional" — the whole object "{ additional: 123 }" will be printed, not just a single number
+         * 
+         * so because there is not foreign properties (properties that "props" cannot have), the object is assumed to be "props"
+         */
+        const expectedMainMsg = '[info] hello world';
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', 123];
+
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+            logger.log('info', 'hello world', { additional: 123 });
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
+
+        const mainMessageData = consoleEvents[0];
+        const additionalMessageData = consoleEvents[1];
+
+        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+        const additionalMessageArgs = await Promise.all([
+            additionalMessageData.args[0].jsonValue(),
+            additionalMessageData.args[1].jsonValue()
+        ]);
+
+        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+    });
+
+    test('logging "main" message and "props" "{ additional: 123, hello: \'world\' }" @ 3rd arg, expecting that object to be "additional"', async ({ page }) => {
+        const expectedMainMsg = '[info] hello world';
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', { additional: 123, hello: 'world' }];
+
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let logger = new window.Logger();
+            logger.log('info', 'hello world', { additional: 123, hello: 'world' });
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
+
+        const mainMessageData = consoleEvents[0];
+        const additionalMessageData = consoleEvents[1];
+
+        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+        const additionalMessageArgs = await Promise.all([
+            additionalMessageData.args[0].jsonValue(),
+            additionalMessageData.args[1].jsonValue()
+        ]);
+
+        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+    });
+});
+
 test.describe('throwing errors', () => {
-    test('no error is thrown when "throwErr" is undefined or false; "main" message "hello world" and "additional" message "foo and bar" are logging', async ({ page }) => {
+    test('no error is thrown when "throwErr" is "undefined" or "false"; "main" message "hello world" and "additional" message "foo and bar" are logging', async ({ page }) => {
         const expectedMainMsg = '[info] hello world';
         const expectedAdditionalMessageParts = ['[info] additional data:\n', 'foo and bar'];
 
@@ -476,14 +578,22 @@ test.describe('throwing errors', () => {
                 additional: 'foo and bar',
                 throwErr: undefined
             });
+
+            logger.log('info', 'hello world', 'foo and bar', {
+                throwErr: false
+            });
+            logger.log('info', 'hello world', 'foo and bar', {
+                throwErr: undefined
+            });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(8);
 
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
+        for (let i = 0; i < 4; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-        for (let i = 0; i <= 2; i += 2) {
-            const mainMessageData = consoleEvents[i];
-            const additionalMessageData = consoleEvents[i + 1];
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
 
             expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
             expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
@@ -494,102 +604,233 @@ test.describe('throwing errors', () => {
             ]);
 
             expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
         }
     });
 
+    test.describe('error is thrown when "throwErr" is true with text of "main" message; "main" message by itself is not logging', () => {
+        test('passing "additional" data in "params"', async ({ page }) => {
+            const expectedErrorMessage = '[error] hello world';
 
-    test('error is thrown when "throwErr" is true with text of "main" message; "main" message is not logging, but "additional" is', async ({ page }) => {
-        const expectedErrorMessage = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
 
-        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
+                logger.log('error', 'hello world', {
+                    additional: undefined,
+                    throwErr: true
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
-            logger.log('error', 'hello world', {
-                additional: 'foo and bar',
-                throwErr: true
-            });
-        }, consoleListeningDurationMs);
-        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+            const consoleEvents = await consoleEventsPromise;
+            expect(consoleEvents.length).toBe(0);
+        });
 
-        const consoleEvents = await consoleEventsPromise;
-        const additionalMessageData = consoleEvents[0];
+        test('passing "additional" data as regular argument', async ({ page }) => {
+            const expectedErrorMessage = '[error] hello world';
 
-        expect(consoleEvents.length).toBe(1);
-        expect(additionalMessageData.args.length).toBe(2);
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
+                logger.log('error', 'hello world', undefined, {
+                    throwErr: true
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+            const consoleEvents = await consoleEventsPromise;
+            expect(consoleEvents.length).toBe(0);
+        });
     });
 
-    test('error is thrown when "throwErr" is of type Error — that Error itself will be thrown — after "main" message and "additional"', async ({ page }) => {
-        const expectedMainMessage = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
-        const expectedErrorMessage = '[error] this is an error'
+    test.describe('error is thrown when "throwErr" is true with text of "main" message; "main" message is not logging, but "additional" is', () => {
+        test('passing "additional" data in "params"', async ({ page }) => {
+            const expectedErrorMessage = '[error] hello world';
+            const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
 
-        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
 
-            logger.log('error', 'hello world', {
-                additional: 'foo and bar',
-                throwErr: new Error('this is an error')
-            });
-        }, consoleListeningDurationMs);
-        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+                logger.log('error', 'hello world', {
+                    additional: 'foo and bar',
+                    throwErr: true
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
-        const consoleEvents = await consoleEventsPromise;
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
+            const consoleEvents = await consoleEventsPromise;
+            const additionalMessageData = consoleEvents[0];
 
-        expect(consoleEvents.length).toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
-        expect(additionalMessageData.args.length).toBe(2);
+            expect(consoleEvents.length).toBe(1);
+            expect(additionalMessageData.args.length).toBe(2);
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
 
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+        });
+
+        test('passing "additional" data as regular argument', async ({ page }) => {
+            const expectedErrorMessage = '[error] hello world';
+            const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
+
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
+
+                logger.log('error', 'hello world', 'foo and bar', {
+                    throwErr: true
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+
+            const consoleEvents = await consoleEventsPromise;
+            const additionalMessageData = consoleEvents[0];
+
+            expect(consoleEvents.length).toBe(1);
+            expect(additionalMessageData.args.length).toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+        });
     });
 
-    test('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', async ({ page }) => {
-        const expectedMainMessage = '[error] hello world';
-        const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
-        const expectedErrorMessage = '[error] this is an error'
+    test.describe('error is thrown when "throwErr" is of type "Error" — that "Error" itself will be thrown — after "main" message and "additional"', () => {
+        test('passing "additional" data in "params"', async ({ page }) => {
+            const expectedMainMessage = '[error] hello world';
+            const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
+            const expectedErrorMessage = '[error] this is an error'
 
-        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
 
-            logger.log('error', 'hello world', {
-                additional: 'foo and bar',
-                throwErr: 'this is an error'
-            });
-        }, consoleListeningDurationMs);
-        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+                logger.log('error', 'hello world', {
+                    additional: 'foo and bar',
+                    throwErr: new Error('this is an error')
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
 
-        const consoleEvents = await consoleEventsPromise;
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
+            const consoleEvents = await consoleEventsPromise;
+            const mainMessageData = consoleEvents[0];
+            const additionalMessageData = consoleEvents[1];
 
-        expect(consoleEvents.length).toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
-        expect(additionalMessageData.args.length).toBe(2);
+            expect(consoleEvents.length).toBe(2);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length).toBe(2);
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
 
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+        });
+
+        test('passing "additional" data as regular argument', async ({ page }) => {
+            const expectedMainMessage = '[error] hello world';
+            const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
+            const expectedErrorMessage = '[error] this is an error'
+
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
+
+                logger.log('error', 'hello world', 'foo and bar', {
+                    throwErr: new Error('this is an error')
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+
+            const consoleEvents = await consoleEventsPromise;
+            const mainMessageData = consoleEvents[0];
+            const additionalMessageData = consoleEvents[1];
+
+            expect(consoleEvents.length).toBe(2);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length).toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+        });
+
+    });
+
+    test.describe('error is thrown when "throwErr" is a string with text of that string — after "main" message and "additional"', () => {
+        test('passing "additional" data in "params"', async ({ page }) => {
+            const expectedMainMessage = '[error] hello world';
+            const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
+            const expectedErrorMessage = '[error] this is an error'
+
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
+
+                logger.log('error', 'hello world', {
+                    additional: 'foo and bar',
+                    throwErr: 'this is an error'
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+
+            const consoleEvents = await consoleEventsPromise;
+            const mainMessageData = consoleEvents[0];
+            const additionalMessageData = consoleEvents[1];
+
+            expect(consoleEvents.length).toBe(2);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length).toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+        });
+
+        test('passing "additional" data as regular argument', async ({ page }) => {
+            const expectedMainMessage = '[error] hello world';
+            const expectedAdditionalMessageParts = ['[error] additional data:\n', 'foo and bar'];
+            const expectedErrorMessage = '[error] this is an error'
+
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
+
+                logger.log('error', 'hello world', 'foo and bar', {
+                    throwErr: 'this is an error'
+                });
+            }, consoleListeningDurationMs);
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+
+            const consoleEvents = await consoleEventsPromise;
+            const mainMessageData = consoleEvents[0];
+            const additionalMessageData = consoleEvents[1];
+
+            expect(consoleEvents.length).toBe(2);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length).toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toBe(expectedAdditionalMessageParts[1]);
+        });
     });
 });
 
@@ -632,13 +873,16 @@ test.describe('cloning', () => {
 });
 
 test.describe('alerts', () => {
-    test('alert "hello world" messsage when `alertMsg` is true, also logging it to console', async ({ page }) => {
+    test('alert "hello world" messsage when `alertMsg` is true, also logging it to console; also checking with "undefined" additional as regular arg', async ({ page }) => {
         const expectedMainMessage = '[info] hello world';
         const expectedAlertMessage = expectedMainMessage;
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('info', 'hello world', {
+                alertMsg: true
+            });
+            logger.log('info', 'hello world', undefined, {
                 alertMsg: true
             });
         }, consoleListeningDurationMs);
@@ -652,9 +896,13 @@ test.describe('alerts', () => {
             await dialog.accept();
         });
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length).toBe(2);
 
-        expect(consoleEvents.length).toBe(1);
-        expect(consoleEvents[0].msg).toBe(expectedMainMessage);
+        for (let i = 0; i < 2; i++) {
+            const mainMessageData = consoleEvents[i];
+
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+        }
     });
 
     test('alert "hello world" messsage and a little note saying there is additional data in console, when `alertMsg` is true, also logging it and additional string "some additional data" to console', async ({ page }) => {
@@ -669,47 +917,7 @@ test.describe('alerts', () => {
                 additional: 'some additional data',
                 alertMsg: true
             });
-        }, consoleListeningDurationMs);
-        page.on('dialog', async (dialog) => {
-            const type = dialog.type();
-            const msg = dialog.message();
-
-            expect(type).toBe('alert');
-            expect(msg).toBe(expectedAlertMessage);
-
-            await dialog.accept();
-        });
-        const consoleEvents = await consoleEventsPromise;
-
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
-        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
-
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
-
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
-    });
-
-
-    test('alert "hello world" messsage and a little note saying there is additional data + an error in console, when `alertMsg` is true, also logging it and additional string "some additional data" to console, then throwing an error', async ({ page }) => {
-        const expectedMainMessage = '[info] hello world';
-        const expectedAdditionalMessageParts = ['[info] additional data:\n', 'some additional data'];
-        const expectedErrorMessage = 'this is an error 🤓🤓';
-        const expectedAlertMessage = '[info] hello world'
-            + '\n\n(see additional data in the console)'
-            + '\n(see an error messaage in the console)';
-
-        const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
-            logger.log('info', 'hello world', {
-                additional: 'some additional data',
-                throwErr: 'this is an error 🤓🤓',
+            logger.log('info', 'hello world', 'some additional data', {
                 alertMsg: true
             });
         }, consoleListeningDurationMs);
@@ -722,22 +930,113 @@ test.describe('alerts', () => {
 
             await dialog.accept();
         });
-        await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        const mainMessageData = consoleEvents[0];
-        const additionalMessageData = consoleEvents[1];
-        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
-        expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
-        expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+        for (let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
 
-        const additionalMessageArgs = await Promise.all([
-            additionalMessageData.args[0].jsonValue(),
-            additionalMessageData.args[1].jsonValue()
-        ]);
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
 
-        expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
-        expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
+    });
+
+    test.describe('alert "hello world" messsage and a little note saying there is additional data + an error in console, when `alertMsg` is true, also logging it and additional string "some additional data" to console, then throwing an error', () => {
+        test('passing "additional" data in "params"', async ({ page }) => {
+            const expectedMainMessage = '[info] hello world';
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', 'some additional data'];
+            const expectedErrorMessage = 'this is an error 🤓🤓';
+            const expectedAlertMessage = '[info] hello world'
+                + '\n\n(see additional data in the console)'
+                + '\n(see an error messaage in the console)';
+
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
+                logger.log('info', 'hello world', {
+                    additional: 'some additional data',
+                    throwErr: 'this is an error 🤓🤓',
+                    alertMsg: true
+                });
+            }, consoleListeningDurationMs);
+            page.on('dialog', async (dialog) => {
+                const type = dialog.type();
+                const msg = dialog.message();
+
+                expect(type).toBe('alert');
+                expect(msg).toBe(expectedAlertMessage);
+
+                await dialog.accept();
+            });
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+            const consoleEvents = await consoleEventsPromise;
+
+            const mainMessageData = consoleEvents[0];
+            const additionalMessageData = consoleEvents[1];
+            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        });
+
+        test('passing "additional" data as regular argument', async ({ page }) => {
+            const expectedMainMessage = '[info] hello world';
+            const expectedAdditionalMessageParts = ['[info] additional data:\n', 'some additional data'];
+            const expectedErrorMessage = 'this is an error 🤓🤓';
+            const expectedAlertMessage = '[info] hello world'
+                + '\n\n(see additional data in the console)'
+                + '\n(see an error messaage in the console)';
+
+            const { consoleEventsPromise, pageFnRunnerPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+                let logger = new window.Logger();
+                logger.log('info', 'hello world', 'some additional data', {
+                    throwErr: 'this is an error 🤓🤓',
+                    alertMsg: true
+                });
+            }, consoleListeningDurationMs);
+            page.on('dialog', async (dialog) => {
+                const type = dialog.type();
+                const msg = dialog.message();
+
+                expect(type).toBe('alert');
+                expect(msg).toBe(expectedAlertMessage);
+
+                await dialog.accept();
+            });
+            await (expect(pageFnRunnerPromise, 'error message should include the expected message')).rejects.toThrow(expectedErrorMessage);
+            const consoleEvents = await consoleEventsPromise;
+
+            const mainMessageData = consoleEvents[0];
+            const additionalMessageData = consoleEvents[1];
+            expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(2);
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMessage);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        });
     });
 });
 
@@ -893,4 +1192,20 @@ function getCoverageGatherer() {
  */
 async function wait(ms: number) {
     await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function exposeDebugFunctionToPage(page: Page, useActualLogFunction: boolean) {
+    if (useActualLogFunction) {
+        // this exposes the actual log function to node context, so it can be called
+        // from `log_debug` — this is possible because `page.exposeFunction` just allows to call
+        // functions in this (node) context as-is, which requires to augment this context, not the page context.
+        globalThis['DEBUG_logActual'] = (str: string) => console.log('[debug] ' + str)
+    } else {
+        // expose `log_debug` function in page context which does nothing by default
+        // this is done before each test so that the actual code wont fail calling `log_debug`
+        await page.exposeFunction('DEBUG_log', (str: string) => {
+            if (globalThis['DEBUG_logActual'])
+                DEBUG_logActual(str);
+        });
+    }
 }
