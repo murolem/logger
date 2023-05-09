@@ -3,7 +3,7 @@ import { LogAliasFn, LogFn, LogLevel, LogParams, LogParamsWithoutAdditional } fr
 import { isObject } from '$utils/isObject';
 import { noop } from '$utils/noop';
 import { objectGetOwnOrFallback } from '$utils/objectGetOwnOrFallback';
-import { doesObjectOnlyHaveSpecificProps } from '$utils/objectHasOwnOnly';
+import { doesObjectOnlyHaveSpecificProps } from '$utils/doesObjectOnlyHaveSpecificProps';
 
 /**
  * The logger utility (not an ultimate, very simple).
