@@ -132,7 +132,7 @@ test.describe('prefixes', () => {
 });
 
 test.describe('log levels', () => {
-    test('logs a "hello world" message with a "warn" log level', async ({ page }) => {
+    test('logs a "hello world" message with a "warn" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let logger = new window.Logger();
             logger.log('warn', 'hello world');
@@ -142,49 +142,143 @@ test.describe('log levels', () => {
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[warn] hello world');
     });
+});
 
-    test('logDebug() logs using "debug" log level', async ({ page }) => {
+test.describe('aliases', () => {
+    test('logDebug() prints "hello world" using "debug" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
+        const expectedMainMsg = '[debug] hello world';
+        const expectedAdditionalMessageParts = ['[debug] additional data:\n', JSON.stringify({ foo: 123 })];
+
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
-            logger.logDebug('hello world');
+            let { logDebug } = new window.Logger();
+            logDebug('hello world', { 
+                additional: { foo: 123 },
+                stringifyAdditional: true 
+            });
+            logDebug('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length).toBe(1);
-        expect(consoleEvents[0].msg).toBe(`[debug] hello world`);
+        for (let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
+
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 
-    test('logInfo() logs using "info" log level', async ({ page }) => {
+    test('logInfo() prints "hello world" using "info" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
+        const expectedMainMsg = '[info] hello world';
+        const expectedAdditionalMessageParts = ['[info] additional data:\n', JSON.stringify({ foo: 123 })];
+
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
-            logger.logInfo('hello world');
+            let { logInfo } = new window.Logger();
+            logInfo('hello world', { 
+                additional: { foo: 123 },
+                stringifyAdditional: true 
+            });
+            logInfo('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length).toBe(1);
-        expect(consoleEvents[0].msg).toBe(`[info] hello world`);
+        for (let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
+
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 
-    test('logWarn() logs using "warn" log level', async ({ page }) => {
+    test('logWarn() prints "hello world" using "warn" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
+        const expectedMainMsg = '[warn] hello world';
+        const expectedAdditionalMessageParts = ['[warn] additional data:\n', JSON.stringify({ foo: 123 })];
+
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
-            logger.logWarn('hello world');
+            let { logWarn } = new window.Logger();
+            logWarn('hello world', { 
+                additional: { foo: 123 },
+                stringifyAdditional: true 
+            });
+            logWarn('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length).toBe(1);
-        expect(consoleEvents[0].msg).toBe(`[warn] hello world`);
+        for (let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
+
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 
-    test('logError() logs using "error" log level', async ({ page }) => {
+    test('logError() prints "hello world" using "error" log level', async ({ page }) => {
+        const expectedMainMsg = '[error] hello world';
+        const expectedAdditionalMessageParts = ['[error] additional data:\n', JSON.stringify({ foo: 123 })];
+
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
-            let logger = new window.Logger();
-            logger.logError('hello world');
+            let { logError } = new window.Logger();
+            logError('hello world', { 
+                additional: { foo: 123 },
+                stringifyAdditional: true 
+            });
+            logError('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
+        expect(consoleEvents.length, 'should log main and additional messages as separate logs').toBe(4);
 
-        expect(consoleEvents.length).toBe(1);
-        expect(consoleEvents[0].msg).toBe(`[error] hello world`);
+        for (let i = 0; i < 2; i++) {
+            const consoleEventsSlice = consoleEvents.slice(i * 2, i * 2 + 2);
+
+            const mainMessageData = consoleEventsSlice[0];
+            const additionalMessageData = consoleEventsSlice[1];
+
+            expect(mainMessageData.msg, 'unexpected main message').toBe(expectedMainMsg);
+            expect(additionalMessageData.args.length, 'additional message should be logged as 2 parts').toBe(2);
+
+            const additionalMessageArgs = await Promise.all([
+                additionalMessageData.args[0].jsonValue(),
+                additionalMessageData.args[1].jsonValue()
+            ]);
+
+            expect(additionalMessageArgs[0], 'first part of additional should be a note message').toBe(expectedAdditionalMessageParts[0]);
+            expect(additionalMessageArgs[1], 'second part of additional should be additional itself').toEqual(expectedAdditionalMessageParts[1]);
+        }
     });
 })
 
