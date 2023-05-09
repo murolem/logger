@@ -17,10 +17,8 @@
     "test:e2e:coverage:chromium": "npm run test:e2e:coverage -- --project=chromium",
     "test:e2e:server": "vite dev",
     "sendit": "npm run add && npm run commit && npm run push",
-    "fuckit": "npm run add && npm run commit && npm run release && npm run push",
     "add": "git add .",
     "commit": "cz",
-    "release": "standard-version",
     "push": "git push --follow-tags origin"
   },
   "directories": {
