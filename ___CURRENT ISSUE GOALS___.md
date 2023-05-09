@@ -27,4 +27,19 @@
 
 - [X] docs
 
+---
+
 Many maybe-related and unrelated changes:
+- renamed commands to run e2e tests on chromium: 
+  - was `...:ch**or**rmium-only` and `...:chromium-only`
+  - became `...:chromium` 
+- added `contants.ts` file to `src` dir — this file now containts the `paramNames` const array with names of "params" properties
+- add `types.ts` file to `src` dir — it is now containts all the types that were before in `src/index.ts`, but grown since this feature branch started.
+- types of `log()` and aliases (such as `logInfo()`) are now separate because of overloads: these functions are lamda-functions because they dont lose context when destructured (they just keep it as it was) and cannot be overloads like regular functions.
+- added utility functions:
+  - `isObject()` — checks if value is object (that has props and stuff) and not null
+  - `noop()` — a function that does nothing, used like a safe plug for some places.
+  - `objectGetOwnOrFallback` — returns a property of an object if it has it or fallback value otherwise.
+  - `doesObjectOnlyHaveSpecificProps` — checks if object has specified props and no others. has a few little fancy options.
+- more path aliases
+- a little cleanup of unused comments
