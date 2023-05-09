@@ -1,7 +1,7 @@
 ---
 name: Refactor
 about: Resolving tech debt.
-title: ''
+title: "[Refactor] "
 labels: refactor
 assignees: ''
 
