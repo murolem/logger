@@ -133,7 +133,7 @@ export type LogAliasFn = {
 	 */
 	(
 		msg: unknown,
-		additional: LogParams['additional'],
+		additional?: LogParams['additional'],
 		params?: Partial<LogParamsWithoutAdditional>
 	): void;
 }
@@ -173,7 +173,7 @@ export type LogFn = {
 	(
 		level: LogLevel,
 		msg: unknown,
-		additional: LogParams['additional'],
+		additional?: LogParams['additional'],
 		params?: Partial<LogParamsWithoutAdditional>
 	): void,
 }

@@ -50,6 +50,7 @@ test.afterAll(async ({ browserName }) => {
         await generateAndSaveCoverageReport();
 });
 
+
 test('logs a "hello world" message', async ({ page }) => {
     const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
         let logger = new window.Logger();
@@ -145,6 +146,17 @@ test.describe('log levels', () => {
 });
 
 test.describe('aliases', () => {
+    test('logInfo() prints "hello world" using "info" log level', async ({page}) => {
+        const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
+            let { logInfo } = new window.Logger();
+            logInfo('hello world');
+        }, consoleListeningDurationMs);
+        const consoleEvents = await consoleEventsPromise;
+    
+        expect(consoleEvents.length).toBe(1);
+        expect(consoleEvents[0].msg).toBe('[info] hello world');
+    });
+
     test('logDebug() prints "hello world" using "debug" log level, "additional" "{ foo: 123 }" as string using "params" "{ stringifyAdditional: true }"', async ({ page }) => {
         const expectedMainMsg = '[debug] hello world';
         const expectedAdditionalMessageParts = ['[debug] additional data:\n', JSON.stringify({ foo: 123 })];
