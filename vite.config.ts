@@ -6,7 +6,7 @@ const cwd = process.cwd();
 
 export default defineConfig({
     plugins: [
-        tsconfigPaths()
+        tsconfigPaths( )
     ],
     root: path.join(cwd, '.'),
     server: {
