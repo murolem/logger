@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/murolem/logger/compare/v0.2.5...v0.3.0) (2023-05-09)
+
+
+### Features
+
+* feture implemented ([a657a0c](https://github.com/murolem/logger/commit/a657a0ccac930fd153071f57017de76fb0d9f84c))
+* testing ci ([f14a3b6](https://github.com/murolem/logger/commit/f14a3b683971d9b2522fd0a50459ce7531c2b643))
+
+
+### Bug Fixes
+
+* fixed broken import ([bbdad0e](https://github.com/murolem/logger/commit/bbdad0e9da6d8ece1093e1ee9a2185b0e199d30d))
+
 ### [0.2.6](https://github.com/murolem/logger/compare/v0.2.5...v0.2.6) (2023-05-09)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@aliser/logger",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "Logs messsages and arbitrary data to the console, can throw errors.",
   "type": "module",
   "main": "dist/index.js",
