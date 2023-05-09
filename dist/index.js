@@ -54,6 +54,9 @@ function doesObjectOnlyHaveSpecificProps(obj, props, {
     return false;
   return fullMatchRequired ? ownProps.length === propsSet.size : true;
 }
+function fallbackIfNullish(value, fallbackValue) {
+  return value === void 0 || value === null ? fallbackValue : value;
+}
 const _Logger = class {
   /**
    * The logger utility.
@@ -181,6 +184,12 @@ const _Logger = class {
           additional = objectGetOwnOrFallback(params, "additional", additional);
           alwaysLogAdditional = objectGetOwnOrFallback(params, "alwaysLogAdditional", alwaysLogAdditional);
           stringifyAdditional = objectGetOwnOrFallback(params, "stringifyAdditional", stringifyAdditional);
+          if (isObject(stringifyAdditional)) {
+            stringifyAdditional.space = fallbackIfNullish(
+              stringifyAdditional.space,
+              2
+            );
+          }
           alertMsg = objectGetOwnOrFallback(params, "alertMsg", alertMsg);
           throwErr = objectGetOwnOrFallback(params, "throwErr", throwErr);
         } else {
@@ -200,6 +209,12 @@ const _Logger = class {
           const params = arg4;
           alwaysLogAdditional = objectGetOwnOrFallback(params, "alwaysLogAdditional", alwaysLogAdditional);
           stringifyAdditional = objectGetOwnOrFallback(params, "stringifyAdditional", stringifyAdditional);
+          if (isObject(stringifyAdditional)) {
+            stringifyAdditional.space = fallbackIfNullish(
+              stringifyAdditional.space,
+              2
+            );
+          }
           alertMsg = objectGetOwnOrFallback(params, "alertMsg", alertMsg);
           throwErr = objectGetOwnOrFallback(params, "throwErr", throwErr);
         } else {
@@ -216,7 +231,7 @@ const _Logger = class {
       if (logAdditional) {
         if (stringifyAdditional) {
           if (stringifyAdditional === true)
-            console.log(prefix + "additional data:\n", JSON.stringify(additional));
+            console.log(prefix + "additional data:\n", JSON.stringify(additional, null, 2));
           else
             console.log(
               prefix + "additional data:\n",
@@ -229,21 +244,6 @@ const _Logger = class {
             );
         } else
           console.log(prefix + "additional data:\n", additional);
-      }
-      if (alertMsg) {
-        const parts = [
-          msgWithPrefix
-        ];
-        if (logAdditional)
-          parts.push("(see additional data in the console)");
-        if (throwErr)
-          parts.push("(see an error messaage in the console)");
-        let result;
-        if (parts.length === 1)
-          result = parts[0];
-        else
-          result = parts[0] + "\n\n" + parts.slice(1).join("\n");
-        alert(result);
       }
       if (throwErr) {
         if (typeof throwErr === "string")

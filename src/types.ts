@@ -58,12 +58,12 @@ export type LogParams = {
 	throwErr: boolean | Error | string,
 
 	/**
-	 * Do you want to show a modal window using `alert()`? Window will contain "main" message and 
+	 * Do you want to show a modal window using `alert()`? It will contain "main" message and 
 	 * the little notes telling you about whether there is {@link LogParams.additional additional data} or {@link LogParams.throwErr an error} being thrown.
 	 * 
 	 * "main" message and {@link LogParams.additional additional} are logged before showing the modal, but in case of {@link LogParams.throwErr an error} — it will be thrown after.
 	 * 
-	 * **Note:** works only in browser!
+	 * **Note:** works only in browser. In other environments this option is ignored.
 	 * 
 	 * @default false
 	 */

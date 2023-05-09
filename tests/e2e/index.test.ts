@@ -5,7 +5,7 @@ import reports from 'istanbul-reports';
 import v8toIstanbul from 'v8-to-istanbul';
 import path from 'path';
 import randomString from 'crypto-random-string';
-import Logger from '$src';
+import Logger from '$src/index';
 import dotenv from 'dotenv';
 // read env variables
 dotenv.config();
@@ -979,6 +979,39 @@ test.describe('cloning', () => {
 });
 
 test.describe('alerts', () => {
+    test('alert "hello world" message when `alertMsg` is true, but in node environment', async ({ page }) => {
+        const expectedMainMessage = '[info] hello world';
+
+        const consoleLogMock = getMockFn();
+
+        // mock console.log
+        console.log = consoleLogMock.mockFn;
+
+        let err;
+        try {
+            let logger = new Logger();
+            logger.log('info', 'hello world', {
+                alertMsg: true
+            });
+            logger.log('info', 'hello world', undefined, {
+                alertMsg: true
+            });
+        } catch (e) {
+            // err = e;
+        }
+
+        expect(err).toBeUndefined();
+        expect(consoleLogMock.calledTimes).toBe(2);
+
+        for (let i = 0; i < Math.min(2, consoleLogMock.calledTimes); i++) {
+            const consoleLogArgs = consoleLogMock.calledWithArgs[i];
+
+            expect(consoleLogArgs.length).toBe(1);
+            expect(consoleLogArgs[0]).toBe(expectedMainMessage);
+
+        }
+    });
+
     test('alert "hello world" messsage when `alertMsg` is true, also logging it to console; also checking with "undefined" additional as regular arg', async ({ page }) => {
         const expectedMainMessage = '[info] hello world';
         const expectedAlertMessage = expectedMainMessage;
@@ -1155,6 +1188,29 @@ type ConsoleEventData = {
     msg: string,
     args: JSHandle[],
     type: string
+}
+
+
+function getMockFn() {
+    let calledTimes = 0;
+    const calledWithArgs: any[][] = [];
+
+    const mockFn = (...args: any): any => {
+        calledTimes++;
+        calledWithArgs.push([...args]);
+    }   
+
+
+    return {
+        mockFn,
+
+        get calledTimes() {
+            return calledTimes;
+        },
+        get calledWithArgs() {
+            return [...calledWithArgs];
+        }
+    }
 }
 
 /**

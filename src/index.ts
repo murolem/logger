@@ -258,7 +258,7 @@ export default class Logger {
 				console.log(prefix + 'additional data:\n', additional);
 		}
 
-		if (alertMsg) {
+		if (alertMsg && 'alert' in globalThis) {
 			const parts = [
 				msgWithPrefix
 			];
@@ -275,8 +275,6 @@ export default class Logger {
 				result = parts[0]
 					+ '\n\n'
 					+ parts.slice(1).join('\n')
-
-			alert(result);
 		}
 
 		if (throwErr) {
