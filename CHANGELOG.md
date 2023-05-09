@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/murolem/logger/compare/v0.4.0...v1.0.0) (2023-05-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* enabled build generation, it wasnt running with previous commits'
+
+### Bug Fixes
+
+* forgot to enable builds, now building on every commit with "sendit" command ([edfedf4](https://github.com/murolem/logger/commit/edfedf4c049e9e557cacd57d4de6a6c012f0bac5))
+
 ## [0.4.0](https://github.com/murolem/logger/compare/v0.3.0...v0.4.0) (2023-05-09)
 
 
