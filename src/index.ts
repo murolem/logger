@@ -1,9 +1,10 @@
 import { paramNames } from '$constants';
-import { LogAliasFn, LogFn, LogLevel, LogParams, LogParamsWithoutAdditional } from '$types';
+import { LogAliasFn, LogFn, LogLevel, LogParams, LogParamsStringifyAdditionalObj, LogParamsWithoutAdditional } from '$types';
 import { isObject } from '$utils/isObject';
 import { noop } from '$utils/noop';
 import { objectGetOwnOrFallback } from '$utils/objectGetOwnOrFallback';
 import { doesObjectOnlyHaveSpecificProps } from '$utils/doesObjectOnlyHaveSpecificProps';
+import { fallbackIfNullish } from '$src/fallbackIfNullish';
 
 /**
  * The logger utility (not an ultimate, very simple).
@@ -188,6 +189,11 @@ export default class Logger {
 				additional = objectGetOwnOrFallback(params, 'additional', additional);
 				alwaysLogAdditional = objectGetOwnOrFallback(params, 'alwaysLogAdditional', alwaysLogAdditional);
 				stringifyAdditional = objectGetOwnOrFallback(params, 'stringifyAdditional', stringifyAdditional);
+				if (isObject(stringifyAdditional)) {
+					(stringifyAdditional as LogParamsStringifyAdditionalObj).space = fallbackIfNullish(
+						(stringifyAdditional as LogParamsStringifyAdditionalObj).space, 2
+					);
+				}
 				alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
 				throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
 			} else {
@@ -214,6 +220,11 @@ export default class Logger {
 
 				alwaysLogAdditional = objectGetOwnOrFallback(params, 'alwaysLogAdditional', alwaysLogAdditional);
 				stringifyAdditional = objectGetOwnOrFallback(params, 'stringifyAdditional', stringifyAdditional);
+				if (isObject(stringifyAdditional)) {
+					(stringifyAdditional as LogParamsStringifyAdditionalObj).space = fallbackIfNullish(
+						(stringifyAdditional as LogParamsStringifyAdditionalObj).space, 2
+					);
+				}
 				alertMsg = objectGetOwnOrFallback(params, 'alertMsg', alertMsg);
 				throwErr = objectGetOwnOrFallback(params, 'throwErr', throwErr);
 			} else {
@@ -235,7 +246,7 @@ export default class Logger {
 		if (logAdditional) {
 			if (stringifyAdditional) {
 				if (stringifyAdditional === true) // just boolean value
-					console.log(prefix + 'additional data:\n', JSON.stringify(additional));
+					console.log(prefix + 'additional data:\n', JSON.stringify(additional, null, 2));
 				else // an object
 					console.log(prefix + 'additional data:\n', JSON.stringify(
 						additional,
