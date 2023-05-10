@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.3](https://github.com/murolem/logger/compare/v1.0.2...v1.0.3) (2023-05-10)
+
+
+### Bug Fixes
+
+* fixed "alert" not working entrierly ([d8830b1](https://github.com/murolem/logger/commit/d8830b14037e511ef473aff1fae14c354b1dc438))
+
 ## [1.0.2](https://github.com/murolem/logger/compare/v1.0.1...v1.0.2) (2023-05-09)
 
 
