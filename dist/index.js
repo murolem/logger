@@ -245,6 +245,21 @@ const _Logger = class {
         } else
           console.log(prefix + "additional data:\n", additional);
       }
+      if (alertMsg && "alert" in globalThis) {
+        const parts = [
+          msgWithPrefix
+        ];
+        if (logAdditional)
+          parts.push("(see additional data in the console)");
+        if (throwErr)
+          parts.push("(see an error messaage in the console)");
+        let result;
+        if (parts.length === 1)
+          result = parts[0];
+        else
+          result = parts[0] + "\n\n" + parts.slice(1).join("\n");
+        alert(result);
+      }
       if (throwErr) {
         if (typeof throwErr === "string")
           throw new Error(prefix + throwErr);

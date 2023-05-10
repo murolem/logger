@@ -5,6 +5,7 @@ import { noop } from '$utils/noop';
 import { objectGetOwnOrFallback } from '$utils/objectGetOwnOrFallback';
 import { doesObjectOnlyHaveSpecificProps } from '$utils/doesObjectOnlyHaveSpecificProps';
 import { fallbackIfNullish } from '$src/fallbackIfNullish';
+import { viteKeepStatement } from '$utils/viteKeepStatement';
 
 /**
  * The logger utility (not an ultimate, very simple).
@@ -275,6 +276,8 @@ export default class Logger {
 				result = parts[0]
 					+ '\n\n'
 					+ parts.slice(1).join('\n')
+
+			alert(result);
 		}
 
 		if (throwErr) {
