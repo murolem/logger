@@ -5,7 +5,7 @@
 
 A simple logging utility.
 
-Can log simple messages, along with:
+Can log simple messages along with:
 
 -   arbitrary data, presented «as is» to view in the browser console or formatted to a json (configurable).
 -   ability to throw an error along with log messages, stopping execution.
