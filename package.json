@@ -1,7 +1,7 @@
 {
   "name": "@aliser/logger",
-  "version": "1.1.1",
-  "description": "A simple logger utility",
+  "version": "1.0.4",
+  "description": "A simple logger utility.",
   "type": "module",
   "main": "dist/index.js",
   "files": [
@@ -47,7 +47,10 @@
     "vite": "^5.0.12",
     "vite-plugin-dts": "^3.7.2"
   },
-  "keywords": [],
+  "keywords": [
+    "typescript",
+    "logger"
+  ],
   "author": "",
   "license": "MIT",
   "config": {
