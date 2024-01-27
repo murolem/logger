@@ -152,3 +152,9 @@ export type LogFn = {
      */
     (level: LogLevel, msg: unknown, additional?: LogParams['additional'], params?: Partial<LogParamsWithoutAdditional>): void;
 };
+/**
+ * Extract the items of the readonly array `T` as string literals.
+ *
+ * The array **must be readonly**, delcared `as const`, for example: `['foo', 'bar'] as const`.
+ */
+export type StringLiteralArrayItems<T extends Readonly<string[]>> = T[number];

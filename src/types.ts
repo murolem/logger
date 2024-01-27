@@ -71,23 +71,23 @@ export type LogParams = {
 }
 
 export type LogParamsStringifyAdditionalObj = {
-    /** 
-     * A function that transforms the results or an array of whitelisted object keys (as strings and numbers).
-     * 
-     * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info.
-     * 
-     * @default undefined
-     */
-    replacer: ((this: any, key: string, value: any) => any) | (number | string)[] | null,
-    /** 
-     * Adds indentation, white space, and line break characters to the 
-     * return-value JSON text to make it easier to read. 
-     * 
-     * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
-     * 
-     * @default undefined
-     */
-    space: string | number
+	/** 
+	 * A function that transforms the results or an array of whitelisted object keys (as strings and numbers).
+	 * 
+	 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info.
+	 * 
+	 * @default undefined
+	 */
+	replacer: ((this: any, key: string, value: any) => any) | (number | string)[] | null,
+	/** 
+	 * Adds indentation, white space, and line break characters to the 
+	 * return-value JSON text to make it easier to read. 
+	 * 
+	 * See {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#parameters JSON docs on MDN} for more info. 
+	 * 
+	 * @default undefined
+	 */
+	space: string | number
 }
 
 export type LogParamsWithoutAdditional = Omit<LogParams, 'additional'>;
@@ -179,3 +179,17 @@ export type LogFn = {
 		params?: Partial<LogParamsWithoutAdditional>
 	): void,
 }
+
+
+
+
+
+
+
+
+/**
+ * Extract the items of the readonly array `T` as string literals.
+ * 
+ * The array **must be readonly**, delcared `as const`, for example: `['foo', 'bar'] as const`.
+ */
+export type StringLiteralArrayItems<T extends Readonly<string[]>> = T[number];

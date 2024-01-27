@@ -146,13 +146,13 @@ test.describe('log levels', () => {
 });
 
 test.describe('aliases', () => {
-    test('logInfo() prints "hello world" using "info" log level', async ({page}) => {
+    test('logInfo() prints "hello world" using "info" log level', async ({ page }) => {
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logInfo } = new window.Logger();
             logInfo('hello world');
         }, consoleListeningDurationMs);
         const consoleEvents = await consoleEventsPromise;
-    
+
         expect(consoleEvents.length).toBe(1);
         expect(consoleEvents[0].msg).toBe('[info] hello world');
     });
@@ -163,9 +163,9 @@ test.describe('aliases', () => {
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logDebug } = new window.Logger();
-            logDebug('hello world', { 
+            logDebug('hello world', {
                 additional: { foo: 123 },
-                stringifyAdditional: true 
+                stringifyAdditional: true
             });
             logDebug('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
@@ -197,9 +197,9 @@ test.describe('aliases', () => {
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logInfo } = new window.Logger();
-            logInfo('hello world', { 
+            logInfo('hello world', {
                 additional: { foo: 123 },
-                stringifyAdditional: true 
+                stringifyAdditional: true
             });
             logInfo('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
@@ -231,9 +231,9 @@ test.describe('aliases', () => {
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logWarn } = new window.Logger();
-            logWarn('hello world', { 
+            logWarn('hello world', {
                 additional: { foo: 123 },
-                stringifyAdditional: true 
+                stringifyAdditional: true
             });
             logWarn('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
@@ -265,9 +265,9 @@ test.describe('aliases', () => {
 
         const { consoleEventsPromise } = await runFnAndGatherConsoleEventsForDuration(page, () => {
             let { logError } = new window.Logger();
-            logError('hello world', { 
+            logError('hello world', {
                 additional: { foo: 123 },
-                stringifyAdditional: true 
+                stringifyAdditional: true
             });
             logError('hello world', { foo: 123 }, { stringifyAdditional: true });
         }, consoleListeningDurationMs);
@@ -1198,7 +1198,7 @@ function getMockFn() {
     const mockFn = (...args: any): any => {
         calledTimes++;
         calledWithArgs.push([...args]);
-    }   
+    }
 
 
     return {
