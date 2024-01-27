@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.4](https://github.com/murolem/logger/compare/v1.0.3...v1.0.4) (2024-01-27)
+
+
+### Bug Fixes
+
+* switched from using source .ts file in tests to using prod .js file ([107562a](https://github.com/murolem/logger/commit/107562af4a926004fe428ec4fabb87c2e0efe2f8))
+
 ## [1.0.3](https://github.com/murolem/logger/compare/v1.0.2...v1.0.3) (2023-05-10)
 
 
