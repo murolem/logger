@@ -1,3 +1,4 @@
+[![npm version](https://badge.fury.io/js/@aliser%2Flogger.svg)](https://badge.fury.io/js/@aliser%2Flogger)
 [![tests](https://github.com/murolem/logger/actions/workflows/test.yml/badge.svg)](https://github.com/murolem/logger/actions)
 [![coverage](https://codecov.io/gh/murolem/logger/branch/main/graph/badge.svg?token=TnonWYz4U8)](https://codecov.io/gh/murolem/logger)
 
