@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.1](https://github.com/murolem/logger/compare/v1.1.0...v1.1.1) (2024-01-27)
+
+
+### Bug Fixes
+
+* trying to get releases working ([fbfc90d](https://github.com/murolem/logger/commit/fbfc90d647f543da539af72d155257297bdd23cb))
+
 ## [1.1.0](https://github.com/murolem/logger/compare/v1.0.4...v1.1.0) (2024-01-27)
 
 
