@@ -2,6 +2,37 @@
 [![coverage](https://codecov.io/gh/murolem/logger/branch/main/graph/badge.svg?token=TnonWYz4U8)](https://codecov.io/gh/murolem/logger)
 
 # logger
-Logs messsages and arbitrary data to the console, can throw errors.
 
-todo the rest :)
+A simple logging utility.
+
+Can log simple messages, along with:
+
+-   arbitrary data, presented «as is» to view in the browser console or formatted to a json (configurable).
+-   ability to throw an error along with log messages, stopping execution.
+-   ability to alert a message using browser «alert».
+-
+
+# Install
+
+```shell
+npm install @aliser/logger
+```
+
+# Usage
+
+```ts
+import { Logger } from "@aliser/logger";
+
+const logger = new Logger();
+logger.logInfo(msg);
+
+// or
+
+const { logInfo, logError } = new Logger();
+logger.logInfo(msg);
+
+// or
+
+const { logInfo, logError } = logger;
+logger.logInfo(msg);
+```

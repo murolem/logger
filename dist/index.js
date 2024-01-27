@@ -57,7 +57,7 @@ function doesObjectOnlyHaveSpecificProps(obj, props, {
 function fallbackIfNullish(value, fallbackValue) {
   return value === void 0 || value === null ? fallbackValue : value;
 }
-const _Logger = class {
+const _Logger = class _Logger {
   /**
    * The logger utility.
    * 
@@ -275,9 +275,9 @@ const _Logger = class {
       globalThis["DEBUG_log"] = noop;
   }
 };
-let Logger = _Logger;
 _prefixParts = new WeakMap();
 _prefixBody = new WeakMap();
+let Logger = _Logger;
 export {
   Logger as default
 };

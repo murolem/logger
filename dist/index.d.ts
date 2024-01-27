@@ -1,8 +1,8 @@
 import { LogAliasFn, LogFn } from './types.ts';
 /**
- * The logger utility (not an ultimate, very simple).
+ * The logger utility.
  *
- * (see constructor for more details).
+ * (see the constructor for more details).
  */
 export default class Logger {
     #private;
