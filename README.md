@@ -23,16 +23,12 @@ npm install @aliser/logger
 ```ts
 import Logger from "@aliser/logger";
 
+// 1. log using one of the methods
 const logger = new Logger();
 logger.logInfo(msg);
 
-// or
-
-const { logInfo, logError } = new Logger();
-logger.logInfo(msg);
-
-// or
-
+// 2. or destructure the methods you need
+const logger = new Logger();
 const { logInfo, logError } = logger;
-logger.logInfo(msg);
+logInfo(msg);
 ```

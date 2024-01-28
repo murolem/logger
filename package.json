@@ -4,6 +4,7 @@
   "description": "A simple logger utility.",
   "type": "module",
   "main": "dist/index.js",
+  "repository": "github:murolem/logger",
   "files": [
     "dist"
   ],
